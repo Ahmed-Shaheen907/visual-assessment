@@ -1,26 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --tgl-black: #000000;
+  --tgl-lime: #D7FF00;
+  --tgl-white: #FFFFFF;
+  --tgl-surface: #0d0d0d;
+  --tgl-border: rgba(215, 255, 0, 0.15);
+  --glow-lime: 0 0 12px rgba(215, 255, 0, 0.4), 0 0 40px rgba(215, 255, 0, 0.15);
+  --glow-lime-sm: 0 0 8px rgba(215, 255, 0, 0.35);
+  --font-heading: var(--font-space);
+  --font-body: var(--font-montserrat);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--tgl-black);
+  --color-foreground: var(--tgl-white);
+  --font-sans: var(--font-montserrat);
+  --font-mono: var(--font-space);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--tgl-black);
+  color: var(--tgl-white);
+  font-family: var(--font-montserrat), 'Montserrat', sans-serif;
+}
+
+@keyframes pin-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.65; }
+  50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.9; }
+}
+
+/* Leaflet z-index fix — keep map below drag overlay */
+.leaflet-pane { z-index: 400 !important; }
+.leaflet-top, .leaflet-bottom { z-index: 500 !important; }
+
+@keyframes pin-pulse-ring {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.12); }
 }

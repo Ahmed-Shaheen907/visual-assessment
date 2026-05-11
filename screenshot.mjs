@@ -25,6 +25,8 @@ const browser = await puppeteer.launch({ headless: true });
 const page = await browser.newPage();
 await page.setViewport({ width: 1440, height: 900 });
 await page.goto(url, { waitUntil: 'networkidle2' });
+// wait for Leaflet map + React portals to fully render
+await new Promise(r => setTimeout(r, 3000));
 await page.screenshot({ path: outputPath, fullPage: false });
 await browser.close();
 

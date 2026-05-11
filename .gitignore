@@ -1,0 +1,14 @@
+.env
+.mcp.json
+credentials.json
+token.json
+.tmp/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Next.js app artifacts
+apps/*/frontend/.next/
+apps/*/frontend/node_modules/
+apps/*/frontend/.env.local

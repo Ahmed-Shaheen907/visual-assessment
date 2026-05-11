@@ -30,15 +30,13 @@ const ZONE_COLORS: Record<string, string> = {
   'zone-6': '#10b981',
 };
 
-// Lives inside MapContainer — tracks pixel coords and current zoom, reports both up
+// Lives inside MapContainer — tracks pixel coords and reports them up
 function MapTracker({
   dropZones,
   onPositionsUpdate,
-  onZoomChange,
 }: {
   dropZones: DropZone[];
   onPositionsUpdate: (positions: Record<string, { x: number; y: number }>) => void;
-  onZoomChange: (zoom: number) => void;
 }) {
   const map = useMap();
 
@@ -49,8 +47,7 @@ function MapTracker({
       next[zone.id] = { x: pt.x, y: pt.y };
     });
     onPositionsUpdate(next);
-    onZoomChange(map.getZoom());
-  }, [map, dropZones, onPositionsUpdate, onZoomChange]);
+  }, [map, dropZones, onPositionsUpdate]);
 
   useEffect(() => {
     map.on('move zoom viewreset resize', update);
@@ -68,14 +65,22 @@ function DroppablePin({
   zone,
   index,
   pos,
+  submitted,
 }: {
   zone: DropZone;
   index: number;
   pos: { x: number; y: number } | undefined;
+  submitted: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: zone.id });
-  const color = ZONE_COLORS[zone.id] ?? '#D7FF00';
+  const baseColor = ZONE_COLORS[zone.id] ?? '#D7FF00';
+
   const answered = !!zone.accepted;
+  const isCorrect = submitted && zone.accepted === zone.label;
+  const isWrong = submitted && answered && zone.accepted !== zone.label;
+
+  // After submit: green for correct, red for wrong; before submit: zone color
+  const pinColor = isCorrect ? '#D7FF00' : isWrong ? '#ef4444' : baseColor;
 
   if (!pos) return null;
 
@@ -101,11 +106,11 @@ function DroppablePin({
           left: '50%',
           top: '50%',
           transform: 'translate(-50%, -50%)',
-          background: `radial-gradient(circle, ${color}33 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${pinColor}33 0%, transparent 70%)`,
           opacity: isOver ? 1 : answered ? 0.3 : 0.7,
           transition: 'opacity 0.2s',
           pointerEvents: 'none',
-          animation: answered ? 'none' : 'pin-pulse-ring 2.5s ease-in-out infinite',
+          animation: answered || submitted ? 'none' : 'pin-pulse-ring 2.5s ease-in-out infinite',
         }}
       />
 
@@ -119,9 +124,9 @@ function DroppablePin({
           left: '50%',
           top: '50%',
           transform: 'translate(-50%, -50%)',
-          border: `2px solid ${color}`,
+          border: `2px solid ${pinColor}`,
           opacity: isOver ? 1 : answered ? 0.5 : 0.65,
-          boxShadow: isOver ? `0 0 16px ${color}88` : answered ? `0 0 10px ${color}44` : 'none',
+          boxShadow: isOver ? `0 0 16px ${pinColor}88` : answered ? `0 0 10px ${pinColor}44` : 'none',
           transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s',
           ...(isOver ? { transform: 'translate(-50%, -50%) scale(1.15)' } : {}),
           pointerEvents: 'none',
@@ -134,20 +139,24 @@ function DroppablePin({
           width: 36,
           height: 36,
           borderRadius: '50%',
-          background: answered ? '#D7FF00' : color,
+          background: answered ? pinColor : baseColor,
           border: '2.5px solid rgba(0,0,0,0.5)',
-          boxShadow: `0 2px 12px ${color}88, 0 0 0 1px ${color}44`,
+          boxShadow: `0 2px 12px ${pinColor}88, 0 0 0 1px ${pinColor}44`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
           transition: 'background 0.25s, transform 0.15s',
           transform: isOver ? 'scale(1.15)' : 'scale(1)',
-          animation: answered ? 'none' : 'pin-pulse 2.5s ease-in-out infinite',
+          animation: answered || submitted ? 'none' : 'pin-pulse 2.5s ease-in-out infinite',
         }}
       >
-        {answered ? (
-          <span style={{ color: '#000', fontSize: 14, fontWeight: 800, fontFamily: 'var(--font-space)' }}>✓</span>
+        {submitted ? (
+          <span style={{ color: isCorrect ? '#000' : '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'var(--font-space)' }}>
+            {isCorrect ? '✓' : '✗'}
+          </span>
+        ) : answered ? (
+          <span style={{ color: '#000', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space)' }}>●</span>
         ) : (
           <span style={{ color: '#fff', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space)' }}>
             {index + 1}
@@ -155,7 +164,7 @@ function DroppablePin({
         )}
       </div>
 
-      {/* Answer badge shown after correct drop */}
+      {/* Answer badge — shown when a label is placed (before submit: neutral, after: colored) */}
       {answered && (
         <div
           style={{
@@ -163,17 +172,21 @@ function DroppablePin({
             top: 'calc(100% + 6px)',
             left: '50%',
             transform: 'translateX(-50%)',
-            background: '#D7FF00',
-            color: '#000',
+            background: submitted ? (isCorrect ? '#D7FF00' : '#ef4444') : 'rgba(255,255,255,0.15)',
+            color: submitted ? (isCorrect ? '#000' : '#fff') : '#fff',
             fontSize: 9,
             fontWeight: 700,
             padding: '2px 8px',
             borderRadius: 4,
             whiteSpace: 'nowrap',
-            boxShadow: '0 0 10px rgba(215,255,0,0.5)',
+            boxShadow: submitted
+              ? isCorrect ? '0 0 10px rgba(215,255,0,0.5)' : '0 0 10px rgba(239,68,68,0.5)'
+              : 'none',
+            border: submitted ? 'none' : '1px solid rgba(255,255,255,0.2)',
             pointerEvents: 'none',
             fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)',
             letterSpacing: '0.02em',
+            transition: 'background 0.3s, color 0.3s',
           }}
         >
           {zone.accepted}
@@ -187,18 +200,14 @@ interface MapProps {
   center: [number, number];
   zoom: number;
   dropZones: DropZone[];
+  submitted: boolean;
 }
 
-export default function Map({ center, zoom, dropZones }: MapProps) {
+export default function Map({ center, zoom, dropZones, submitted }: MapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
-  const [mapZoom, setMapZoom] = useState(zoom);
 
   const handlePositions = useCallback((pos: Record<string, { x: number; y: number }>) => {
     setPositions(pos);
-  }, []);
-
-  const handleZoom = useCallback((z: number) => {
-    setMapZoom(z);
   }, []);
 
   return (
@@ -210,31 +219,21 @@ export default function Map({ center, zoom, dropZones }: MapProps) {
         scrollWheelZoom={true}
         zoomControl={true}
       >
-        {/* Dark base map — no labels */}
+        {/* Dark base map — no labels at any zoom level */}
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         />
-        {/* Road name labels — rendered only when user has zoomed past 12 so settlement names don't spoil quiz answers at default zoom.
-            Critically: no minZoom prop here — Leaflet uses TileLayer minZoom to set map._layersMinZoom, which would snap the map zoom to 12 and corrupt latLngToContainerPoint calculations. */}
-        {mapZoom >= 12 && (
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png"
-            attribution=""
-            opacity={0.8}
-          />
-        )}
         <MapTracker
           dropZones={dropZones}
           onPositionsUpdate={handlePositions}
-          onZoomChange={handleZoom}
         />
       </MapContainer>
 
       {/* Pin overlay — outside MapContainer so Leaflet's overflow:hidden doesn't clip pins */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {dropZones.map((zone, i) => (
-          <DroppablePin key={zone.id} zone={zone} index={i} pos={positions[zone.id]} />
+          <DroppablePin key={zone.id} zone={zone} index={i} pos={positions[zone.id]} submitted={submitted} />
         ))}
       </div>
     </div>

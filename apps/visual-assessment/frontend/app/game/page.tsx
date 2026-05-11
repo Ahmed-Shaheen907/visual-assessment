@@ -31,13 +31,19 @@ const TOTAL = INITIAL_DROP_ZONES.length;
 
 export default function GamePage() {
   const [dropZones, setDropZones] = useState<DropZone[]>(INITIAL_DROP_ZONES);
-  const [score, setScore] = useState(0);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [completed, setCompleted] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
   const placedLabels = dropZones.map((z) => z.accepted).filter(Boolean) as string[];
+  const placedCount = placedLabels.length;
+  const correctCount = dropZones.filter((z) => z.accepted === z.label).length;
+  const allPlaced = placedCount === TOTAL;
   const activeAnswer = ANSWERS.find((a) => a.id === activeId);
+
+  const displayScore = submitted ? correctCount : placedCount;
+  const progress = (displayScore / TOTAL) * 100;
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string);
@@ -45,30 +51,29 @@ export default function GamePage() {
 
   function handleDragEnd(event: DragEndEvent) {
     setActiveId(null);
+    if (submitted) return;
     const { active, over } = event;
     if (!over) return;
 
     const answer = ANSWERS.find((a) => a.id === (active.id as string));
-    const zone = dropZones.find((z) => z.id === (over.id as string));
-    if (!answer || !zone) return;
+    const targetZone = dropZones.find((z) => z.id === (over.id as string));
+    if (!answer || !targetZone) return;
 
-    const isCorrect = answer.label === zone.label;
-    if (!isCorrect) return;
-
+    // Accept any label on any pin — old occupant is implicitly freed since
+    // placedLabels derives from dropZones and the old label leaves the accepted set
     setDropZones((prev) =>
-      prev.map((z) => z.id === zone.id ? { ...z, accepted: answer.label } : z)
+      prev.map((z) => z.id === targetZone.id ? { ...z, accepted: answer.label } : z)
     );
-    setScore((s) => s + 1);
+  }
+
+  function handleSubmit() {
+    setSubmitted(true);
   }
 
   function handleReset() {
     setDropZones(INITIAL_DROP_ZONES);
-    setScore(0);
-    setCompleted(false);
+    setSubmitted(false);
   }
-
-  const progress = (score / TOTAL) * 100;
-  const allDone = score === TOTAL;
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -89,20 +94,20 @@ export default function GamePage() {
                 North Coast Assessment
               </h1>
               <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-montserrat)' }}>
-                Drag each location to its correct pin
+                {submitted ? 'Results' : 'Drag each location to its correct pin'}
               </p>
             </div>
           </div>
           <div
             className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold"
             style={{
-              border: '1px solid rgba(215,255,0,0.3)',
+              border: `1px solid ${submitted ? (correctCount === TOTAL ? 'rgba(215,255,0,0.3)' : 'rgba(239,68,68,0.3)') : 'rgba(215,255,0,0.3)'}`,
               fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)',
-              color: 'var(--tgl-lime)',
-              background: 'rgba(215,255,0,0.06)',
+              color: submitted ? (correctCount === TOTAL ? 'var(--tgl-lime)' : '#ef4444') : 'var(--tgl-lime)',
+              background: submitted ? (correctCount === TOTAL ? 'rgba(215,255,0,0.06)' : 'rgba(239,68,68,0.06)') : 'rgba(215,255,0,0.06)',
             }}
           >
-            {score} <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span> {TOTAL}
+            {displayScore} <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span> {TOTAL}
           </div>
         </header>
 
@@ -110,9 +115,15 @@ export default function GamePage() {
         <div className="shrink-0 px-6 pt-3 pb-1">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-montserrat)' }}>
-              Progress
+              {submitted ? 'Score' : 'Progress'}
             </span>
-            <span className="text-xs font-bold" style={{ color: 'var(--tgl-lime)', fontFamily: 'var(--font-space)' }}>
+            <span
+              className="text-xs font-bold"
+              style={{
+                color: submitted ? (correctCount === TOTAL ? 'var(--tgl-lime)' : '#ef4444') : 'var(--tgl-lime)',
+                fontFamily: 'var(--font-space)',
+              }}
+            >
               {Math.round(progress)}%
             </span>
           </div>
@@ -124,9 +135,15 @@ export default function GamePage() {
               className="h-full rounded-full"
               style={{
                 width: `${progress}%`,
-                background: 'var(--tgl-lime)',
-                boxShadow: progress > 0 ? '0 0 8px rgba(215,255,0,0.6)' : 'none',
-                transition: 'width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                background: submitted
+                  ? correctCount === TOTAL ? 'var(--tgl-lime)' : '#ef4444'
+                  : 'var(--tgl-lime)',
+                boxShadow: progress > 0
+                  ? submitted
+                    ? correctCount === TOTAL ? '0 0 8px rgba(215,255,0,0.6)' : '0 0 8px rgba(239,68,68,0.6)'
+                    : '0 0 8px rgba(215,255,0,0.6)'
+                  : 'none',
+                transition: 'width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s',
               }}
             />
           </div>
@@ -144,7 +161,7 @@ export default function GamePage() {
               minHeight: 460,
             }}
           >
-            <Map center={[31.05, 28.2]} zoom={9} dropZones={dropZones} />
+            <Map center={[31.05, 28.2]} zoom={9} dropZones={dropZones} submitted={submitted} />
           </div>
 
           {/* Sidebar */}
@@ -156,17 +173,21 @@ export default function GamePage() {
               Locations
             </p>
 
-            {completed ? (
-              /* Completion state */
+            {submitted ? (
+              /* Results state */
               <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
                 <div
                   className="text-4xl font-black"
-                  style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-lime)', lineHeight: 1 }}
+                  style={{
+                    fontFamily: 'var(--font-space)',
+                    color: correctCount === TOTAL ? 'var(--tgl-lime)' : '#ef4444',
+                    lineHeight: 1,
+                  }}
                 >
-                  {score}/{TOTAL}
+                  {correctCount}/{TOTAL}
                 </div>
                 <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                  Assessment complete
+                  {correctCount === TOTAL ? 'Perfect score!' : `${TOTAL - correctCount} wrong — try again`}
                 </p>
                 <button
                   onClick={handleReset}
@@ -195,22 +216,22 @@ export default function GamePage() {
                   ))}
                 </div>
 
-                {/* Done button */}
+                {/* Submit button — enabled when all 6 pins have a label placed */}
                 <button
-                  disabled={!allDone}
-                  onClick={() => allDone && setCompleted(true)}
+                  disabled={!allPlaced}
+                  onClick={() => allPlaced && handleSubmit()}
                   className="mt-3 w-full py-3 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95"
                   style={{
                     fontFamily: 'var(--font-space)',
-                    background: allDone ? 'var(--tgl-lime)' : 'rgba(215,255,0,0.06)',
-                    color: allDone ? '#000' : 'rgba(215,255,0,0.3)',
-                    border: allDone ? 'none' : '1px solid rgba(215,255,0,0.15)',
-                    boxShadow: allDone ? 'var(--glow-lime)' : 'none',
-                    cursor: allDone ? 'pointer' : 'not-allowed',
+                    background: allPlaced ? 'var(--tgl-lime)' : 'rgba(215,255,0,0.06)',
+                    color: allPlaced ? '#000' : 'rgba(215,255,0,0.3)',
+                    border: allPlaced ? 'none' : '1px solid rgba(215,255,0,0.15)',
+                    boxShadow: allPlaced ? 'var(--glow-lime)' : 'none',
+                    cursor: allPlaced ? 'pointer' : 'not-allowed',
                   }}
                   data-testid="done-button"
                 >
-                  {allDone ? '✓ Submit' : `${score}/${TOTAL} Complete`}
+                  {allPlaced ? '✓ Submit' : `${placedCount}/${TOTAL} Placed`}
                 </button>
               </>
             )}

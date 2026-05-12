@@ -20,12 +20,12 @@ import { saveAnswers } from '@/lib/supabase-helpers';
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
 const INITIAL_DROP_ZONES: DropZone[] = [
-  { id: 'zone-1', label: 'Marsa Matrouh',      lat: 31.3543, lng: 27.2373, accepted: null },
-  { id: 'zone-2', label: 'Sidi Heneish',        lat: 31.2430, lng: 27.9350, accepted: null },
-  { id: 'zone-3', label: 'Ras Al Hekma',        lat: 31.1150, lng: 28.6330, accepted: null },
-  { id: 'zone-4', label: 'El Dabaa',            lat: 30.9600, lng: 28.4240, accepted: null },
-  { id: 'zone-5', label: 'Sidi Abdel Rahman',   lat: 30.8730, lng: 28.8520, accepted: null },
-  { id: 'zone-6', label: 'New Alamein',         lat: 30.8570, lng: 28.8550, accepted: null },
+  { id: 'zone-1', label: 'Marsa Matrouh',      lat: 31.3519, lng: 27.1817, accepted: null },
+  { id: 'zone-2', label: 'Sidi Heneish',        lat: 31.1630, lng: 27.6270, accepted: null },
+  { id: 'zone-3', label: 'Ras Al Hekma',        lat: 31.1944, lng: 27.7881, accepted: null },
+  { id: 'zone-4', label: 'El Dabaa',            lat: 31.0322, lng: 28.4444, accepted: null },
+  { id: 'zone-5', label: 'Sidi Abdel Rahman',   lat: 30.9619, lng: 28.7369, accepted: null },
+  { id: 'zone-6', label: 'New Alamein',         lat: 30.8572, lng: 28.8547, accepted: null },
 ];
 
 const ANSWERS = INITIAL_DROP_ZONES.map((z, i) => ({ id: `ans-${i}`, label: z.label }));

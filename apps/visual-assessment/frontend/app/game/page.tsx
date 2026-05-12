@@ -24,8 +24,8 @@ const INITIAL_DROP_ZONES: DropZone[] = [
   { id: 'zone-2', label: 'Sidi Heneish',        lat: 31.2430, lng: 27.9350, accepted: null },
   { id: 'zone-3', label: 'Ras Al Hekma',        lat: 31.1150, lng: 28.6330, accepted: null },
   { id: 'zone-4', label: 'El Dabaa',            lat: 30.9600, lng: 28.4240, accepted: null },
-  { id: 'zone-5', label: 'Sidi Abdel Rahman',   lat: 30.8770, lng: 28.7240, accepted: null },
-  { id: 'zone-6', label: 'New Alamein',         lat: 30.8430, lng: 29.0120, accepted: null },
+  { id: 'zone-5', label: 'Sidi Abdel Rahman',   lat: 30.8730, lng: 28.8520, accepted: null },
+  { id: 'zone-6', label: 'New Alamein',         lat: 30.8570, lng: 28.8550, accepted: null },
 ];
 
 const ANSWERS = INITIAL_DROP_ZONES.map((z, i) => ({ id: `ans-${i}`, label: z.label }));

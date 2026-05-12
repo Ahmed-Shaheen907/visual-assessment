@@ -278,18 +278,6 @@ export default function Phase1Page() {
                     : `${dropZones.length - correctCount} wrong`}
                 </p>
                 <button
-                  onClick={() => { setDropZones(buildZones(sectionIndex)); setSubmitted(false); }}
-                  className="w-full py-2.5 rounded-lg text-sm font-bold transition-all duration-150 active:scale-95"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    color: 'rgba(255,255,255,0.6)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    fontFamily: 'var(--font-space)',
-                  }}
-                >
-                  Try Again
-                </button>
-                <button
                   onClick={handleContinue}
                   disabled={saving || transitioning}
                   className="w-full py-2.5 rounded-lg text-sm font-bold transition-all duration-150 active:scale-95"

@@ -189,7 +189,7 @@ function DroppablePin({
             transition: 'background 0.3s, color 0.3s',
           }}
         >
-          {zone.accepted}
+          {submitted && isWrong ? zone.label : zone.accepted}
         </div>
       )}
     </div>

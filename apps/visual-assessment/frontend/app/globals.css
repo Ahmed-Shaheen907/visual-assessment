@@ -38,3 +38,12 @@ body {
   0%, 100% { transform: translate(-50%, -50%) scale(1); }
   50% { transform: translate(-50%, -50%) scale(1.12); }
 }
+
+@keyframes section-breathe {
+  0%, 100% { opacity: 0.9; }
+  50%       { opacity: 0.15; }
+}
+
+.section-breathing-border {
+  animation: section-breathe 2.2s ease-in-out infinite;
+}

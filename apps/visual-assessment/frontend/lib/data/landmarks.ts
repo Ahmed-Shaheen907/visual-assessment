@@ -10,6 +10,7 @@ export interface Section {
   label: string;
   center: [number, number];
   bounds: [[number, number], [number, number]];
+  polygonCoords?: [number, number][];
   landmarks: Landmark[];
   improvementTip: string;
 }
@@ -20,9 +21,17 @@ export const SECTIONS: Section[] = [
     label: 'Marsa Matrouh',
     center: [31.3543, 27.2373],
     bounds: [[31.15, 26.80], [31.55, 27.65]],
+    polygonCoords: [
+      [31.48, 26.8], [31.47, 27.0], [31.44, 27.2], [31.41, 27.4], [31.38, 27.6],
+      [31.22, 27.6], [31.25, 27.4], [31.28, 27.2], [31.30, 27.0], [31.30, 26.8],
+    ],
     improvementTip: 'Focus on studying the coastal landmarks and key selling points of Marsa Matrouh — its beaches, marina, and proximity to Siwa.',
     landmarks: [
-      // TODO: add { id: 'mm-1', label: 'Example Landmark', lat: 31.35, lng: 27.23 }
+      { id: 'mm-1', label: 'Cleopatra Beach',     lat: 31.37, lng: 27.21 },
+      { id: 'mm-2', label: 'Agiba Beach',          lat: 31.30, lng: 26.92 },
+      { id: 'mm-3', label: 'Rommel Beach',         lat: 31.36, lng: 27.18 },
+      { id: 'mm-4', label: 'Marsa Matrouh Marina', lat: 31.35, lng: 27.23 },
+      { id: 'mm-5', label: 'Lido Beach',           lat: 31.37, lng: 27.24 },
     ],
   },
   {
@@ -30,39 +39,89 @@ export const SECTIONS: Section[] = [
     label: 'Sidi Heneish',
     center: [31.2430, 27.9350],
     bounds: [[31.05, 27.60], [31.45, 28.25]],
+    polygonCoords: [
+      [31.38, 27.6], [31.33, 27.8], [31.28, 28.0], [31.22, 28.2],
+      [31.10, 28.2], [31.14, 28.0], [31.18, 27.8], [31.22, 27.6],
+    ],
     improvementTip: 'Review the unique features and real estate projects in Sidi Heneish, including beach access and community amenities.',
-    landmarks: [],
+    landmarks: [
+      { id: 'sh-1', label: 'Marassi (Emaar)',    lat: 31.25, lng: 28.01 },
+      { id: 'sh-2', label: 'Almaza Bay',          lat: 31.22, lng: 28.00 },
+      { id: 'sh-3', label: 'Sidi Heneish Beach',  lat: 31.25, lng: 27.93 },
+      { id: 'sh-4', label: 'Diplo Beach',         lat: 31.28, lng: 27.85 },
+      { id: 'sh-5', label: 'Amwaj Sidi Heneish',  lat: 31.27, lng: 27.95 },
+    ],
   },
   {
     id: 'ras_al_hekma',
     label: 'Ras Al Hekma',
     center: [31.1150, 28.6330],
     bounds: [[30.95, 28.35], [31.30, 28.95]],
+    polygonCoords: [
+      [31.12, 28.55], [31.10, 28.65], [31.07, 28.82],
+      [30.92, 28.82], [30.96, 28.65], [30.99, 28.55],
+    ],
     improvementTip: 'Study Ras Al Hekma\'s key attractions — its bay, undeveloped coastline, and the major developments planned or underway.',
-    landmarks: [],
+    landmarks: [
+      { id: 'rh-1', label: 'Ras Al Hekma Bay',  lat: 31.08, lng: 28.63 },
+      { id: 'rh-2', label: 'Hacienda Bay',       lat: 31.00, lng: 28.68 },
+      { id: 'rh-3', label: 'Mountain View NC',   lat: 31.05, lng: 28.60 },
+      { id: 'rh-4', label: 'Swan Lake (Haneya)', lat: 31.07, lng: 28.58 },
+      { id: 'rh-5', label: 'Fouka Marine',       lat: 31.10, lng: 28.52 },
+    ],
   },
   {
     id: 'el_dabaa',
     label: 'El Dabaa',
     center: [30.9600, 28.4240],
     bounds: [[30.78, 28.15], [31.15, 28.70]],
+    polygonCoords: [
+      [31.22, 28.2], [31.18, 28.35], [31.12, 28.55],
+      [30.99, 28.55], [31.02, 28.35], [31.10, 28.2],
+    ],
     improvementTip: 'Learn the key facts about El Dabaa — its nuclear plant proximity, infrastructure investments, and coastal properties.',
-    landmarks: [],
+    landmarks: [
+      { id: 'ed-1', label: 'El Dabaa City',       lat: 30.96, lng: 28.43 },
+      { id: 'ed-2', label: 'Fouka Bay (Tatweer)', lat: 31.00, lng: 28.48 },
+      { id: 'ed-3', label: 'Bo Islands',          lat: 31.02, lng: 28.52 },
+      { id: 'ed-4', label: 'Blue Blue El Dabaa',  lat: 30.98, lng: 28.38 },
+      { id: 'ed-5', label: 'Amwaj El Dabaa',      lat: 31.05, lng: 28.35 },
+    ],
   },
   {
     id: 'sidi_abdel_rahman',
     label: 'Sidi Abdel Rahman',
     center: [30.8770, 28.7240],
     bounds: [[30.70, 28.50], [31.05, 28.95]],
+    polygonCoords: [
+      [31.07, 28.82], [31.00, 28.9], [30.96, 29.0],
+      [30.82, 29.0], [30.86, 28.9], [30.92, 28.82],
+    ],
     improvementTip: 'Revisit Sidi Abdel Rahman\'s hallmarks — its crystal-clear bay, luxury resort density, and proximity to Alamein.',
-    landmarks: [],
+    landmarks: [
+      { id: 'sar-1', label: 'Sidi Abdel Rahman Bay', lat: 30.88, lng: 28.73 },
+      { id: 'sar-2', label: 'Hacienda White',        lat: 30.87, lng: 28.71 },
+      { id: 'sar-3', label: 'La Serena Beach',       lat: 30.85, lng: 28.72 },
+      { id: 'sar-4', label: 'Stella Di Mare',        lat: 30.90, lng: 28.74 },
+      { id: 'sar-5', label: 'Crystal Bay',           lat: 30.92, lng: 28.76 },
+    ],
   },
   {
     id: 'new_alamein',
     label: 'New Alamein',
     center: [30.8430, 29.0120],
     bounds: [[30.65, 28.78], [31.04, 29.25]],
+    polygonCoords: [
+      [30.96, 29.0], [30.93, 29.12], [30.90, 29.25],
+      [30.72, 29.25], [30.77, 29.12], [30.82, 29.0],
+    ],
     improvementTip: 'Deep-dive into New Alamein City — the towers, university, cultural district, corniche, and its status as a year-round city.',
-    landmarks: [],
+    landmarks: [
+      { id: 'na-1', label: 'Alamein International University', lat: 30.87, lng: 29.01 },
+      { id: 'na-2', label: 'El Alamein Towers',                lat: 30.82, lng: 29.04 },
+      { id: 'na-3', label: 'Mazarine New Alamein',             lat: 30.85, lng: 29.02 },
+      { id: 'na-4', label: 'New Alamein Corniche',             lat: 30.83, lng: 29.01 },
+      { id: 'na-5', label: 'Cali Coast',                      lat: 30.80, lng: 28.95 },
+    ],
   },
 ];

@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Polygon, useMap } from 'react-leaflet';
+import { SECTIONS } from '@/lib/data/landmarks';
 import { useDroppable } from '@dnd-kit/core';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -245,6 +246,21 @@ export default function Map({ center, zoom, dropZones, submitted, onRemove }: Ma
           url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         />
+        {SECTIONS.map((section, i) =>
+          section.polygonCoords ? (
+            <Polygon
+              key={section.id}
+              positions={section.polygonCoords}
+              pathOptions={{
+                color: ZONE_COLORS[`zone-${i + 1}`] ?? '#D7FF00',
+                weight: 2,
+                opacity: 0.75,
+                fillColor: ZONE_COLORS[`zone-${i + 1}`] ?? '#D7FF00',
+                fillOpacity: 0.07,
+              }}
+            />
+          ) : null
+        )}
         <MapTracker
           dropZones={dropZones}
           onPositionsUpdate={handlePositions}

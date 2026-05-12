@@ -37,19 +37,16 @@ export const SECTIONS: Section[] = [
   {
     id: 'sidi_heneish',
     label: 'Sidi Heneish',
-    center: [31.2430, 27.9350],
-    bounds: [[31.19, 27.79], [31.31, 28.07]],
-    polygonCoords: [
-      [31.38, 27.6], [31.33, 27.8], [31.28, 28.0], [31.22, 28.2],
-      [31.10, 28.2], [31.14, 28.0], [31.18, 27.8], [31.22, 27.6],
-    ],
+    center: [31.179, 27.625],
+    bounds: [[31.14, 27.52], [31.21, 27.72]],
+    polygonCoords: [],
     improvementTip: 'Review the unique features and real estate projects in Sidi Heneish, including beach access and community amenities.',
     landmarks: [
-      { id: 'sh-1', label: 'Marassi (Emaar)',    lat: 31.25, lng: 28.01 },
-      { id: 'sh-2', label: 'Almaza Bay',          lat: 31.22, lng: 28.00 },
-      { id: 'sh-3', label: 'Sidi Heneish Beach',  lat: 31.25, lng: 27.93 },
-      { id: 'sh-4', label: 'Diplo Beach',         lat: 31.28, lng: 27.85 },
-      { id: 'sh-5', label: 'Amwaj Sidi Heneish',  lat: 31.27, lng: 27.95 },
+      { id: 'sh-1', label: 'Almaza Bay',                    lat: 31.195, lng: 27.555 },
+      { id: 'sh-2', label: 'Baghoush Village',              lat: 31.172, lng: 27.669 },
+      { id: 'sh-3', label: 'El Abd Resort',                 lat: 31.185, lng: 27.635 },
+      { id: 'sh-4', label: 'Makanna Clubhouse',             lat: 31.183, lng: 27.638 },
+      { id: 'sh-5', label: 'Sidi Heneish Train Station',    lat: 31.163, lng: 27.627 },
     ],
   },
   {

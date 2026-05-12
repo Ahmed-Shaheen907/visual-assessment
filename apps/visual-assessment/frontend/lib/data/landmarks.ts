@@ -110,17 +110,17 @@ export const SECTIONS: Section[] = [
     id: 'new_alamein',
     label: 'New Alamein',
     center: [30.857, 28.855],
-    bounds: [[30.77, 28.74], [30.89, 28.97]],
+    bounds: [[30.80, 28.76], [30.91, 28.95]],
     polygonCoords: [
-      [30.882, 28.757],  // NW coast - Diplo 3
-      [30.886, 28.808],  // N coast
-      [30.879, 28.862],  // N coast - Tolip Alamein
-      [30.867, 28.952],  // NE coast - Mazarine
-      [30.847, 28.965],  // E
-      [30.793, 28.955],  // SE - Industrial area
-      [30.778, 28.905],  // S
-      [30.780, 28.840],  // SW
-      [30.808, 28.748],  // W
+      [30.895, 28.793],  // NW coast — Marassi point
+      [30.888, 28.848],  // N coast — Plage area
+      [30.877, 28.918],  // NE coast — before Marina bay
+      [30.856, 28.933],  // E — east boundary (Marina excluded)
+      [30.833, 28.925],  // SE — El Alamein area (just outside)
+      [30.820, 28.862],  // S — Industrial area east
+      [30.820, 28.805],  // S — Industrial area west
+      [30.842, 28.787],  // SW
+      [30.870, 28.780],  // W — west of ECHEM
     ],
     improvementTip: 'Deep-dive into New Alamein City — the towers, university, cultural district, corniche, and its status as a year-round city.',
     landmarks: [

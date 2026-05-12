@@ -109,19 +109,26 @@ export const SECTIONS: Section[] = [
   {
     id: 'new_alamein',
     label: 'New Alamein',
-    center: [30.835, 29.025],
-    bounds: [[30.79, 28.94], [30.88, 29.10]],
+    center: [30.857, 28.855],
+    bounds: [[30.77, 28.74], [30.89, 28.97]],
     polygonCoords: [
-      [30.872, 28.945], [30.870, 28.998], [30.867, 29.048], [30.864, 29.100],
-      [30.798, 29.100], [30.794, 29.050], [30.795, 29.000], [30.800, 28.945],
+      [30.882, 28.757],  // NW coast - Diplo 3
+      [30.886, 28.808],  // N coast
+      [30.879, 28.862],  // N coast - Tolip Alamein
+      [30.867, 28.952],  // NE coast - Mazarine
+      [30.847, 28.965],  // E
+      [30.793, 28.955],  // SE - Industrial area
+      [30.778, 28.905],  // S
+      [30.780, 28.840],  // SW
+      [30.808, 28.748],  // W
     ],
     improvementTip: 'Deep-dive into New Alamein City — the towers, university, cultural district, corniche, and its status as a year-round city.',
     landmarks: [
-      { id: 'na-1', label: 'Alamein International University', lat: 30.793, lng: 29.034 },
-      { id: 'na-2', label: 'El Alamein Towers',                lat: 30.836, lng: 29.024 },
-      { id: 'na-3', label: 'Mazarine New Alamein',             lat: 30.843, lng: 29.014 },
-      { id: 'na-4', label: 'New Alamein Corniche',             lat: 30.849, lng: 29.006 },
-      { id: 'na-5', label: 'Cali Coast',                      lat: 30.841, lng: 29.018 },
+      { id: 'na-1', label: 'Alamein International University', lat: 30.800, lng: 28.905 },
+      { id: 'na-2', label: 'El Alamein Towers',                lat: 30.858, lng: 28.940 },
+      { id: 'na-3', label: 'Mazarine New Alamein',             lat: 30.862, lng: 28.955 },
+      { id: 'na-4', label: 'New Alamein Corniche',             lat: 30.873, lng: 28.860 },
+      { id: 'na-5', label: 'Cali Coast',                      lat: 30.864, lng: 28.912 },
     ],
   },
 ];

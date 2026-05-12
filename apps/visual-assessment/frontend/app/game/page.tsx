@@ -70,6 +70,11 @@ export default function GamePage() {
     setSubmitted(true);
   }
 
+  function handleRemove(zoneId: string) {
+    if (submitted) return;
+    setDropZones((prev) => prev.map((z) => z.id === zoneId ? { ...z, accepted: null } : z));
+  }
+
   function handleReset() {
     setDropZones(INITIAL_DROP_ZONES);
     setSubmitted(false);
@@ -161,7 +166,7 @@ export default function GamePage() {
               minHeight: 460,
             }}
           >
-            <Map center={[31.05, 28.2]} zoom={9} dropZones={dropZones} submitted={submitted} />
+            <Map center={[31.05, 28.2]} zoom={9} dropZones={dropZones} submitted={submitted} onRemove={handleRemove} />
           </div>
 
           {/* Sidebar */}

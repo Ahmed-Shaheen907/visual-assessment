@@ -66,11 +66,13 @@ function DroppablePin({
   index,
   pos,
   submitted,
+  onRemove,
 }: {
   zone: DropZone;
   index: number;
   pos: { x: number; y: number } | undefined;
   submitted: boolean;
+  onRemove?: (zoneId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: zone.id });
   const baseColor = ZONE_COLORS[zone.id] ?? '#D7FF00';
@@ -164,9 +166,10 @@ function DroppablePin({
         )}
       </div>
 
-      {/* Answer badge — shown when a label is placed (before submit: neutral, after: colored) */}
+      {/* Answer badge — shown when a label is placed (before submit: removable, after: locked+colored) */}
       {answered && (
         <div
+          onClick={!submitted && onRemove ? () => onRemove(zone.id) : undefined}
           style={{
             position: 'absolute',
             top: 'calc(100% + 6px)',
@@ -176,20 +179,37 @@ function DroppablePin({
             color: submitted ? (isCorrect ? '#000' : '#fff') : '#fff',
             fontSize: 9,
             fontWeight: 700,
-            padding: '2px 8px',
+            padding: submitted ? '2px 8px' : '2px 6px 2px 8px',
             borderRadius: 4,
             whiteSpace: 'nowrap',
             boxShadow: submitted
               ? isCorrect ? '0 0 10px rgba(215,255,0,0.5)' : '0 0 10px rgba(239,68,68,0.5)'
               : 'none',
             border: submitted ? 'none' : '1px solid rgba(255,255,255,0.2)',
-            pointerEvents: 'none',
+            pointerEvents: submitted ? 'none' : 'all',
+            cursor: submitted ? 'default' : 'pointer',
             fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)',
             letterSpacing: '0.02em',
             transition: 'background 0.3s, color 0.3s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
           }}
         >
           {submitted && isWrong ? zone.label : zone.accepted}
+          {!submitted && (
+            <span
+              style={{
+                fontSize: 10,
+                lineHeight: 1,
+                opacity: 0.6,
+                fontWeight: 900,
+                marginTop: -1,
+              }}
+            >
+              ×
+            </span>
+          )}
         </div>
       )}
     </div>
@@ -201,9 +221,10 @@ interface MapProps {
   zoom: number;
   dropZones: DropZone[];
   submitted: boolean;
+  onRemove?: (zoneId: string) => void;
 }
 
-export default function Map({ center, zoom, dropZones, submitted }: MapProps) {
+export default function Map({ center, zoom, dropZones, submitted, onRemove }: MapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
 
   const handlePositions = useCallback((pos: Record<string, { x: number; y: number }>) => {
@@ -233,7 +254,7 @@ export default function Map({ center, zoom, dropZones, submitted }: MapProps) {
       {/* Pin overlay — outside MapContainer so Leaflet's overflow:hidden doesn't clip pins */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {dropZones.map((zone, i) => (
-          <DroppablePin key={zone.id} zone={zone} index={i} pos={positions[zone.id]} submitted={submitted} />
+          <DroppablePin key={zone.id} zone={zone} index={i} pos={positions[zone.id]} submitted={submitted} onRemove={onRemove} />
         ))}
       </div>
     </div>

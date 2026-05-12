@@ -2,7 +2,8 @@
 
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   DndContext,
   DragEndEvent,
@@ -14,6 +15,7 @@ import {
 } from '@dnd-kit/core';
 import DraggableAnswer from '@/components/DraggableAnswer';
 import type { DropZone } from '@/components/Map';
+import { saveAnswers } from '@/lib/supabase-helpers';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
@@ -30,9 +32,11 @@ const ANSWERS = INITIAL_DROP_ZONES.map((z, i) => ({ id: `ans-${i}`, label: z.lab
 const TOTAL = INITIAL_DROP_ZONES.length;
 
 export default function GamePage() {
+  const router = useRouter();
   const [dropZones, setDropZones] = useState<DropZone[]>(INITIAL_DROP_ZONES);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -79,6 +83,20 @@ export default function GamePage() {
     setDropZones(INITIAL_DROP_ZONES);
     setSubmitted(false);
   }
+
+  const handleContinue = useCallback(async () => {
+    setSaving(true);
+    const sessionId = localStorage.getItem('va_session_id');
+    if (sessionId) {
+      await saveAnswers(sessionId, dropZones.map((z) => ({
+        phase: 'phase0',
+        question_id: z.id,
+        answer_given: z.accepted,
+        correct: z.accepted === z.label,
+      })));
+    }
+    router.push('/phase1');
+  }, [dropZones, router]);
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -198,13 +216,27 @@ export default function GamePage() {
                   onClick={handleReset}
                   className="w-full py-2.5 rounded-lg text-sm font-bold transition-all duration-150 active:scale-95"
                   style={{
-                    background: 'var(--tgl-lime)',
-                    color: '#000',
-                    boxShadow: 'var(--glow-lime-sm)',
+                    background: 'rgba(255,255,255,0.06)',
+                    color: 'rgba(255,255,255,0.6)',
+                    border: '1px solid rgba(255,255,255,0.12)',
                     fontFamily: 'var(--font-space)',
                   }}
                 >
                   Try Again
+                </button>
+                <button
+                  onClick={handleContinue}
+                  disabled={saving}
+                  className="w-full py-2.5 rounded-lg text-sm font-bold transition-all duration-150 active:scale-95"
+                  style={{
+                    background: saving ? 'rgba(215,255,0,0.08)' : 'var(--tgl-lime)',
+                    color: saving ? 'rgba(215,255,0,0.4)' : '#000',
+                    boxShadow: saving ? 'none' : 'var(--glow-lime-sm)',
+                    fontFamily: 'var(--font-space)',
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {saving ? 'Saving…' : 'Continue →'}
                 </button>
               </div>
             ) : (

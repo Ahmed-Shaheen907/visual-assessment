@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { MapContainer, TileLayer, Rectangle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { useDroppable } from '@dnd-kit/core';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -28,7 +28,7 @@ function FlyController({ bounds }: { bounds: L.LatLngBoundsExpression }) {
     const key = JSON.stringify(bounds);
     if (key !== prevKey.current) {
       prevKey.current = key;
-      map.flyToBounds(bounds as L.LatLngBoundsExpression, { duration: 1.5, padding: [50, 50] });
+      map.flyToBounds(bounds as L.LatLngBoundsExpression, { duration: 1.5, padding: [40, 40], maxZoom: 14 });
     }
   }, [map, bounds]);
 
@@ -144,10 +144,6 @@ export default function ZoomedMap({ bounds, dropZones, submitted, onRemove }: Zo
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        />
-        <Rectangle
-          bounds={bounds}
-          pathOptions={{ color: '#ffffff', weight: 3, fillOpacity: 0, className: 'section-breathing-border' }}
         />
         <FlyController bounds={bounds} />
         <MapTracker dropZones={dropZones} onPositionsUpdate={handlePositions} />

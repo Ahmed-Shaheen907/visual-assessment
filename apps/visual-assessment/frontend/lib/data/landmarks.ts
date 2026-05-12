@@ -20,7 +20,7 @@ export const SECTIONS: Section[] = [
     id: 'marsa_matrouh',
     label: 'Marsa Matrouh',
     center: [31.3543, 27.2373],
-    bounds: [[31.15, 26.80], [31.55, 27.65]],
+    bounds: [[31.27, 26.85], [31.40, 27.32]],
     polygonCoords: [
       [31.48, 26.8], [31.47, 27.0], [31.44, 27.2], [31.41, 27.4], [31.38, 27.6],
       [31.22, 27.6], [31.25, 27.4], [31.28, 27.2], [31.30, 27.0], [31.30, 26.8],
@@ -38,7 +38,7 @@ export const SECTIONS: Section[] = [
     id: 'sidi_heneish',
     label: 'Sidi Heneish',
     center: [31.2430, 27.9350],
-    bounds: [[31.05, 27.60], [31.45, 28.25]],
+    bounds: [[31.19, 27.79], [31.31, 28.07]],
     polygonCoords: [
       [31.38, 27.6], [31.33, 27.8], [31.28, 28.0], [31.22, 28.2],
       [31.10, 28.2], [31.14, 28.0], [31.18, 27.8], [31.22, 27.6],
@@ -56,7 +56,7 @@ export const SECTIONS: Section[] = [
     id: 'ras_al_hekma',
     label: 'Ras Al Hekma',
     center: [31.1150, 28.6330],
-    bounds: [[30.95, 28.35], [31.30, 28.95]],
+    bounds: [[30.96, 28.47], [31.14, 28.73]],
     polygonCoords: [
       [31.12, 28.55], [31.10, 28.65], [31.07, 28.82],
       [30.92, 28.82], [30.96, 28.65], [30.99, 28.55],
@@ -74,7 +74,7 @@ export const SECTIONS: Section[] = [
     id: 'el_dabaa',
     label: 'El Dabaa',
     center: [30.9600, 28.4240],
-    bounds: [[30.78, 28.15], [31.15, 28.70]],
+    bounds: [[30.92, 28.30], [31.08, 28.58]],
     polygonCoords: [
       [31.22, 28.2], [31.18, 28.35], [31.12, 28.55],
       [30.99, 28.55], [31.02, 28.35], [31.10, 28.2],
@@ -92,7 +92,7 @@ export const SECTIONS: Section[] = [
     id: 'sidi_abdel_rahman',
     label: 'Sidi Abdel Rahman',
     center: [30.873, 28.852],
-    bounds: [[30.84, 28.76], [30.94, 28.93]],
+    bounds: [[30.85, 28.77], [30.91, 28.90]],
     polygonCoords: [
       [30.892, 28.780], [30.893, 28.823], [30.890, 28.870], [30.887, 28.915],
       [30.858, 28.915], [30.855, 28.862], [30.857, 28.810], [30.862, 28.780],
@@ -110,7 +110,7 @@ export const SECTIONS: Section[] = [
     id: 'new_alamein',
     label: 'New Alamein',
     center: [30.857, 28.855],
-    bounds: [[30.80, 28.76], [30.91, 28.95]],
+    bounds: [[30.77, 28.83], [30.89, 28.98]],
     polygonCoords: [
       [30.895, 28.793],  // NW coast — Marassi point
       [30.888, 28.848],  // N coast — Plage area

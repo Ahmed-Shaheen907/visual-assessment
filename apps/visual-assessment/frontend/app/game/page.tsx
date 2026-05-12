@@ -79,11 +79,6 @@ export default function GamePage() {
     setDropZones((prev) => prev.map((z) => z.id === zoneId ? { ...z, accepted: null } : z));
   }
 
-  function handleReset() {
-    setDropZones(INITIAL_DROP_ZONES);
-    setSubmitted(false);
-  }
-
   const handleContinue = useCallback(async () => {
     setSaving(true);
     const sessionId = localStorage.getItem('va_session_id');
@@ -212,18 +207,6 @@ export default function GamePage() {
                 <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>
                   {correctCount === TOTAL ? 'Perfect score!' : `${TOTAL - correctCount} wrong — try again`}
                 </p>
-                <button
-                  onClick={handleReset}
-                  className="w-full py-2.5 rounded-lg text-sm font-bold transition-all duration-150 active:scale-95"
-                  style={{
-                    background: 'rgba(255,255,255,0.06)',
-                    color: 'rgba(255,255,255,0.6)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    fontFamily: 'var(--font-space)',
-                  }}
-                >
-                  Try Again
-                </button>
                 <button
                   onClick={handleContinue}
                   disabled={saving}

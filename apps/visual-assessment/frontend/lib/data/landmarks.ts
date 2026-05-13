@@ -17,35 +17,19 @@ export interface Section {
 
 export const SECTIONS: Section[] = [
   {
-    id: 'marsa_matrouh',
-    label: 'Marsa Matrouh',
-    center: [31.3543, 27.2373],
-    bounds: [[31.27, 26.85], [31.40, 27.32]],
-    polygonCoords: [
-      [31.48, 26.8], [31.47, 27.0], [31.44, 27.2], [31.41, 27.4], [31.38, 27.6],
-      [31.22, 27.6], [31.25, 27.4], [31.28, 27.2], [31.30, 27.0], [31.30, 26.8],
-    ],
-    improvementTip: 'Focus on studying the coastal landmarks and key selling points of Marsa Matrouh — its beaches, marina, and proximity to Siwa.',
-    landmarks: [
-      { id: 'mm-1', label: 'Cleopatra Beach',     lat: 31.37, lng: 27.21 },
-      { id: 'mm-2', label: 'Agiba Beach',          lat: 31.30, lng: 26.92 },
-      { id: 'mm-3', label: 'Rommel Beach',         lat: 31.36, lng: 27.18 },
-      { id: 'mm-4', label: 'Marsa Matrouh Marina', lat: 31.35, lng: 27.23 },
-      { id: 'mm-5', label: 'Lido Beach',           lat: 31.37, lng: 27.24 },
-    ],
-  },
-  {
     id: 'sidi_heneish',
     label: 'Sidi Heneish',
-    center: [31.1753, 27.6368],
-    bounds: [[31.155, 27.618], [31.192, 27.658]],
-    polygonCoords: [],
+    center: [31.1848, 27.6063],
+    bounds: [[31.17, 27.54], [31.21, 27.67]],
+    polygonCoords: [
+      [31.21, 27.54], [31.21, 27.67], [31.17, 27.67], [31.17, 27.54],
+    ],
     improvementTip: 'Review the unique features and real estate projects in Sidi Heneish, including beach access and community amenities.',
     landmarks: [
-      { id: 'sh-1', label: 'Baghoush Village',           lat: 31.176709, lng: 27.645096 },
-      { id: 'sh-2', label: 'El Abd Resort',              lat: 31.181552, lng: 27.637604 },
-      { id: 'sh-3', label: 'Makanna Clubhouse',          lat: 31.179971, lng: 27.634343 },
-      { id: 'sh-4', label: 'Sidi Heneish Train Station', lat: 31.163699, lng: 27.628577 },
+      { id: 'sh-1', label: 'JAZ Elite Crystal, Almaza Bay', lat: 31.1992062, lng: 27.5534961 },
+      { id: 'sh-2', label: 'Silver Sands Project PMV',      lat: 31.1812695, lng: 27.5994832 },
+      { id: 'sh-3', label: 'Marsa Baghush Desert',          lat: 31.181253,  lng: 27.615556  },
+      { id: 'sh-4', label: 'Marsa Baghush',                 lat: 31.1774707, lng: 27.656592  },
     ],
   },
   {
@@ -72,19 +56,18 @@ export const SECTIONS: Section[] = [
   {
     id: 'el_dabaa',
     label: 'El Dabaa',
-    center: [30.9600, 28.4240],
-    bounds: [[30.92, 28.30], [31.08, 28.58]],
+    center: [31.0682, 28.3640],
+    bounds: [[31.03, 28.18], [31.09, 28.51]],
     polygonCoords: [
-      [31.22, 28.2], [31.18, 28.35], [31.12, 28.55],
-      [30.99, 28.55], [31.02, 28.35], [31.10, 28.2],
+      [31.09, 28.18], [31.09, 28.51], [31.03, 28.51], [31.03, 28.18],
     ],
     improvementTip: 'Learn the key facts about El Dabaa — its nuclear plant proximity, infrastructure investments, and coastal properties.',
     landmarks: [
-      { id: 'ed-1', label: 'El Dabaa City',       lat: 30.96, lng: 28.43 },
-      { id: 'ed-2', label: 'Fouka Bay (Tatweer)', lat: 31.00, lng: 28.48 },
-      { id: 'ed-3', label: 'Bo Islands',          lat: 31.02, lng: 28.52 },
-      { id: 'ed-4', label: 'Blue Blue El Dabaa',  lat: 30.98, lng: 28.38 },
-      { id: 'ed-5', label: 'Amwaj El Dabaa',      lat: 31.05, lng: 28.35 },
+      { id: 'ed-1', label: 'El Dabaa Nuclear Power Plant',    lat: 31.0457665, lng: 28.4943264 },
+      { id: 'ed-2', label: 'D-bay Tatweer',                   lat: 31.0816625, lng: 28.388447  },
+      { id: 'ed-3', label: 'La Serena North Coast Village',   lat: 31.0780932, lng: 28.3781774 },
+      { id: 'ed-4', label: 'La Vista Bay',                    lat: 31.0705354, lng: 28.3636827 },
+      { id: 'ed-5', label: 'Katameya Coast',                  lat: 31.0649581, lng: 28.1952057 },
     ],
   },
   {
@@ -108,26 +91,22 @@ export const SECTIONS: Section[] = [
   {
     id: 'new_alamein',
     label: 'New Alamein',
-    center: [30.857, 28.855],
-    bounds: [[30.77, 28.83], [30.89, 28.98]],
+    center: [30.8555, 28.9362],
+    bounds: [[30.83, 28.90], [30.88, 28.96]],
     polygonCoords: [
-      [30.895, 28.793],  // NW coast — Marassi point
-      [30.888, 28.848],  // N coast — Plage area
-      [30.877, 28.918],  // NE coast — before Marina bay
-      [30.856, 28.933],  // E — east boundary (Marina excluded)
-      [30.833, 28.925],  // SE — El Alamein area (just outside)
-      [30.820, 28.862],  // S — Industrial area east
-      [30.820, 28.805],  // S — Industrial area west
-      [30.842, 28.787],  // SW
-      [30.870, 28.780],  // W — west of ECHEM
+      [30.88, 28.90], [30.88, 28.96], [30.83, 28.96], [30.83, 28.90],
     ],
     improvementTip: 'Deep-dive into New Alamein City — the towers, university, cultural district, corniche, and its status as a year-round city.',
     landmarks: [
-      { id: 'na-1', label: 'Alamein International University', lat: 30.800, lng: 28.905 },
-      { id: 'na-2', label: 'El Alamein Towers',                lat: 30.858, lng: 28.940 },
-      { id: 'na-3', label: 'Mazarine New Alamein',             lat: 30.862, lng: 28.955 },
-      { id: 'na-4', label: 'New Alamein Corniche',             lat: 30.873, lng: 28.860 },
-      { id: 'na-5', label: 'Cali Coast',                      lat: 30.864, lng: 28.912 },
+      { id: 'na-1', label: 'Palm Hills Alamein',        lat: 30.8607248, lng: 28.9166024 },
+      { id: 'na-2', label: 'Down Town New Alamein',     lat: 30.8572587, lng: 28.9136359 },
+      { id: 'na-3', label: 'Al Alamein Model Hospital', lat: 30.8429515, lng: 28.9400128 },
+      { id: 'na-4', label: 'El Alamein Military Museum',lat: 30.8414013, lng: 28.9428699 },
+      { id: 'na-5', label: 'Marina El Alamein',         lat: 30.8548433, lng: 28.9520834 },
+      { id: 'na-6', label: 'Marina Al Dawli',           lat: 30.863722,  lng: 28.943222  },
+      { id: 'na-7', label: 'Lagoon',                    lat: 30.859833,  lng: 28.931222  },
+      { id: 'na-8', label: 'Al Alamein Tower',          lat: 30.860222,  lng: 28.940861  },
+      { id: 'na-9', label: 'Marina Yachts',             lat: 30.858472,  lng: 28.944861  },
     ],
   },
 ];

@@ -6,6 +6,7 @@ export interface Session {
   email: string;
   started_at: string;
   completed_at: string | null;
+  user_id: string | null;
 }
 
 export interface Answer {
@@ -25,14 +26,57 @@ export interface AnswerInput {
   correct: boolean;
 }
 
-export async function createSession(name: string, email: string): Promise<string> {
+export interface Profile {
+  id: string;
+  name: string;
+  is_manager: boolean;
+}
+
+export async function createProfile(userId: string, name: string): Promise<void> {
+  const { error } = await supabase.from('va_profiles').insert({ id: userId, name });
+  if (error) throw error;
+}
+
+export async function getUserProfile(userId: string): Promise<Profile | null> {
+  const { data } = await supabase
+    .from('va_profiles')
+    .select('id, name, is_manager')
+    .eq('id', userId)
+    .single();
+  return data ?? null;
+}
+
+export async function createSession(name: string, email: string, userId?: string): Promise<string> {
   const { data, error } = await supabase
     .from('va_sessions')
-    .insert({ name, email })
+    .insert({ name, email, user_id: userId ?? null })
     .select('id')
     .single();
   if (error) throw error;
   return data.id;
+}
+
+export async function getAgentSessions(userId: string): Promise<{ session: Session; answers: Answer[] }[]> {
+  const { data: sessions, error: se } = await supabase
+    .from('va_sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .not('completed_at', 'is', null)
+    .order('completed_at', { ascending: false });
+  if (se) throw se;
+  if (!sessions?.length) return [];
+
+  const ids = sessions.map((s) => s.id);
+  const { data: answers, error: ae } = await supabase
+    .from('va_answers')
+    .select('*')
+    .in('session_id', ids);
+  if (ae) throw ae;
+
+  return sessions.map((session) => ({
+    session,
+    answers: (answers ?? []).filter((a) => a.session_id === session.id),
+  }));
 }
 
 export async function markSessionComplete(sessionId: string): Promise<void> {

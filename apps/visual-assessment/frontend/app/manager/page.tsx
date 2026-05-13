@@ -2,7 +2,9 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { getAllSessions } from '@/lib/supabase-helpers';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { getAllSessions, getUserProfile } from '@/lib/supabase-helpers';
 import type { Session, Answer } from '@/lib/supabase-helpers';
 import { SECTIONS } from '@/lib/data/landmarks';
 
@@ -60,18 +62,28 @@ function ScoreCell({ score }: { score: { correct: number; total: number; pct: nu
 }
 
 export default function ManagerPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [rows, setRows] = useState<AgentRow[]>([]);
 
   useEffect(() => {
-    getAllSessions()
-      .then((all) => {
-        setRows(all.map(({ session, answers }) => computeAgentRow(session, answers)));
-      })
-      .catch(() => setError('Failed to load data.'))
-      .finally(() => setLoading(false));
-  }, []);
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { router.replace('/auth'); return; }
+      const profile = await getUserProfile(user.id);
+      if (!profile?.is_manager) { router.replace('/dashboard'); return; }
+
+      getAllSessions()
+        .then((all) => setRows(all.map(({ session, answers }) => computeAgentRow(session, answers))))
+        .catch(() => setError('Failed to load data.'))
+        .finally(() => setLoading(false));
+    });
+  }, [router]);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.replace('/auth');
+  }
 
   return (
     <main className="min-h-screen flex flex-col" style={{ background: 'var(--tgl-black)' }}>
@@ -91,14 +103,29 @@ export default function ManagerPage() {
             </p>
           </div>
         </div>
-        {!loading && (
-          <div
-            className="px-4 py-1.5 rounded-full text-sm font-bold"
-            style={{ border: '1px solid rgba(215,255,0,0.3)', color: 'var(--tgl-lime)', background: 'rgba(215,255,0,0.06)', fontFamily: 'var(--font-space)' }}
+        <div className="flex items-center gap-3">
+          {!loading && (
+            <div
+              className="px-4 py-1.5 rounded-full text-sm font-bold"
+              style={{ border: '1px solid rgba(215,255,0,0.3)', color: 'var(--tgl-lime)', background: 'rgba(215,255,0,0.06)', fontFamily: 'var(--font-space)' }}
+            >
+              {rows.length} Agent{rows.length !== 1 ? 's' : ''}
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="px-4 py-1.5 rounded-full text-xs font-bold transition-opacity hover:opacity-60"
+            style={{
+              fontFamily: 'var(--font-space)',
+              color: 'rgba(255,255,255,0.4)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'transparent',
+              cursor: 'pointer',
+            }}
           >
-            {rows.length} Agent{rows.length !== 1 ? 's' : ''}
-          </div>
-        )}
+            Log Out
+          </button>
+        </div>
       </header>
 
       <div className="flex-1 px-6 py-8 overflow-x-auto">

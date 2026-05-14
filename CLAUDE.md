@@ -94,13 +94,40 @@ Each app frontend uses its own `apps/<app-name>/frontend/.env.local` for Supabas
 
 ## Deploy Rule — Non-Negotiable
 
-**Every change, no exceptions, must be committed and pushed to GitHub before the task is considered done.**
+**Every session must work on its own feature branch. Never commit directly to `master`.**
 
-- `git add <changed files>`
-- `git commit -m "..."`
-- `git push` — this triggers Vercel auto-deploy
+### At the start of every session:
+1. Check the current branch: `git branch --show-current`
+2. If already on a feature branch (not `master`), continue on it.
+3. If on `master`, create a new branch named after the feature being built:
+   ```
+   git checkout -b feature/<short-description>
+   ```
+   Example: `feature/quiz-timer`, `feature/results-screen`, `feature/phase2-map`
 
-Do not ask the user if they want to push. Do not wait to be asked. Push immediately after finishing any code change. The task is not complete until the push succeeds.
+### During the session:
+- Commit and push to the feature branch freely — no risk of conflicting with other sessions:
+  ```
+  git add <changed files>
+  git commit -m "..."
+  git push -u origin feature/<short-description>
+  ```
+- Do not push to `master` directly.
+
+### At the end of the session:
+- Confirm the branch is pushed: `git push`
+- Tell the user which branch was used, e.g.: "All changes are on branch `feature/quiz-timer`. Merge it into master when ready to deploy."
+
+### To deploy (user runs this when all sessions are done):
+```
+git checkout master
+git merge feature/branch-one
+git merge feature/branch-two
+git push
+```
+Vercel auto-deploys on push to `master`. If there are merge conflicts, resolve them before pushing.
+
+Do not ask the user if they want to push to the feature branch. Push immediately after finishing any code change. The task is not complete until the push to the feature branch succeeds.
 
 ---
 

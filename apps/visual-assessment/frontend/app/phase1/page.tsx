@@ -16,6 +16,7 @@ import {
 import DraggableAnswer from '@/components/DraggableAnswer';
 import PinQuizPanel from '@/components/PinQuizPanel';
 import type { DropZone } from '@/components/Map';
+import type { QuizPhase } from '@/components/ZoomedMap';
 import { SECTIONS } from '@/lib/data/landmarks';
 import { PIN_QUIZZES } from '@/lib/data/pin-quizzes';
 import { saveAnswers } from '@/lib/supabase-helpers';
@@ -41,11 +42,13 @@ export default function Phase1Page() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activePinQuizId, setActivePinQuizId] = useState<string | null>(null);
-  const [quizSubmitting, setQuizSubmitting] = useState(false);
-  const [activeCompoundBounds, setActiveCompoundBounds] = useState<[[number, number], [number, number]] | null>(null);
 
-  // On mount: fly to first section, then reveal content
+  // Quiz mode state machine
+  const [quizPhase, setQuizPhase] = useState<QuizPhase>('idle');
+  const [activePinQuizId, setActivePinQuizId] = useState<string | null>(null);
+  const [activePinTarget, setActivePinTarget] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
+  const [quizSubmitting, setQuizSubmitting] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDropZones(buildZones(0));
@@ -97,27 +100,40 @@ export default function Phase1Page() {
   }
 
   function handlePinClick(zoneId: string) {
-    if (submitted || transitioning || activePinQuizId) return;
+    if (submitted || transitioning || quizPhase !== 'idle') return;
     const quiz = PIN_QUIZZES.find((q) => q.landmarkId === zoneId);
     if (!quiz) return;
-    setActivePinQuizId(zoneId);
-    setActiveCompoundBounds(quiz.focusBounds);
+
+    setActivePinQuizId(zoneId);       // pin disappears immediately (hiddenPinId)
+    setActivePinTarget(quiz.focusPoint);
+    setQuizPhase('zooming');
+
+    // t=2000ms: layout starts shifting, map starts fading
+    setTimeout(() => {
+      setQuizPhase('transitioning');
+      // t=2800ms: PNG fades in, quiz panel appears
+      setTimeout(() => {
+        setQuizPhase('active');
+      }, 800);
+    }, 2000);
   }
 
-  const handleQuizSubmit = useCallback(async (answers: Record<string, string>) => {
+  const handleQuizSubmit = useCallback(async (ans: Record<string, string>) => {
     setQuizSubmitting(true);
     const sessionId = localStorage.getItem('va_session_id');
     if (sessionId && activePinQuiz) {
       await saveAnswers(sessionId, activePinQuiz.questions.map((q) => ({
         phase: `phase1_pin_${activePinQuizId}`,
         question_id: q.id,
-        answer_given: answers[q.id] ?? null,
+        answer_given: ans[q.id] ?? null,
         correct: false,
       })));
     }
     setQuizSubmitting(false);
+    // Reset everything — layout transitions back via CSS
+    setQuizPhase('idle');
     setActivePinQuizId(null);
-    setActiveCompoundBounds(null);
+    setActivePinTarget(null);
   }, [activePinQuiz, activePinQuizId]);
 
   const handleContinue = useCallback(async () => {
@@ -149,6 +165,13 @@ export default function Phase1Page() {
   }, [dropZones, sectionIndex, section.id, router]);
 
   const progress = (sectionIndex / SECTIONS.length) * 100;
+
+  // Drive layout widths from quiz phase
+  const quizActive = quizPhase === 'transitioning' || quizPhase === 'active';
+  const MAP_NORMAL_WIDTH = 'calc(100% - 228px)'; // fill - (208px sidebar + 20px gap)
+  const MAP_QUIZ_WIDTH = '40%';
+  const SIDEBAR_NORMAL_WIDTH = '208px';
+  const SIDEBAR_QUIZ_WIDTH = '60%';
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -186,7 +209,7 @@ export default function Phase1Page() {
           </div>
         </header>
 
-        {/* Section progress bar */}
+        {/* Progress bar */}
         <div className="shrink-0 px-6 pt-3 pb-1">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-montserrat)' }}>
@@ -213,29 +236,69 @@ export default function Phase1Page() {
         </div>
 
         {/* Main content */}
-        <div className="flex flex-1 gap-5 p-5 min-h-0">
+        <div
+          className="flex flex-1 min-h-0"
+          style={{ padding: 20, gap: 20 }}
+        >
 
-          {/* Map */}
+          {/* Map container — animates width */}
           <div
-            className="flex-1 rounded-xl overflow-hidden relative"
             style={{
+              width: quizActive ? MAP_QUIZ_WIDTH : MAP_NORMAL_WIDTH,
+              flexShrink: 0,
+              transition: 'width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              borderRadius: '0.75rem',
+              overflow: 'hidden',
+              position: 'relative',
               border: '1px solid rgba(215,255,0,0.15)',
               boxShadow: '0 0 40px rgba(215,255,0,0.05), inset 0 0 0 1px rgba(215,255,0,0.05)',
               minHeight: 460,
             }}
           >
             <ZoomedMap
-              bounds={activeCompoundBounds ?? activeBounds}
+              bounds={activeBounds}
               dropZones={dropZones}
               submitted={submitted}
               onRemove={handleRemove}
               onPinClick={handlePinClick}
               quizPinIds={quizPinIds}
-              overlayImage={activePinQuiz?.masterPlanImage}
-              overlayBounds={activePinQuiz?.overlayBounds}
+              quizPhase={quizPhase}
+              activePinTarget={activePinTarget ?? undefined}
+              hiddenPinId={activePinQuizId}
             />
 
-            {/* Transition overlay */}
+            {/* Masterplan PNG — mounts during 'transitioning' so opacity transition fires correctly */}
+            {activePinQuiz && (quizPhase === 'transitioning' || quizPhase === 'active') && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: '#000',
+                  zIndex: 1500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: quizPhase === 'active' ? 1 : 0,
+                  transition: 'opacity 0.8s ease',
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={activePinQuiz.masterPlanImage}
+                  alt="Compound masterplan"
+                  style={{
+                    maxWidth: '90%',
+                    maxHeight: '90%',
+                    objectFit: 'contain',
+                    animation: quizPhase === 'active'
+                      ? 'masterplan-entrance 1s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+                      : 'none',
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Section transition overlay */}
             {transitioning && (
               <div
                 style={{
@@ -264,25 +327,43 @@ export default function Phase1Page() {
             )}
           </div>
 
-          {/* Sidebar */}
-          <aside className="w-52 flex flex-col gap-2 shrink-0">
-            {!activePinQuiz && (
-              <p
-                className="text-xs font-bold uppercase tracking-widest mb-1"
-                style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)' }}
-              >
-                Landmarks
-              </p>
-            )}
-
-            {activePinQuiz ? (
+          {/* Sidebar — animates width */}
+          <aside
+            style={{
+              width: quizActive ? SIDEBAR_QUIZ_WIDTH : SIDEBAR_NORMAL_WIDTH,
+              flexShrink: 0,
+              transition: 'width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
+            {quizPhase === 'active' && activePinQuiz ? (
+              /* Active quiz */
               <PinQuizPanel
                 quiz={activePinQuiz}
                 onSubmit={handleQuizSubmit}
                 submitting={quizSubmitting}
               />
+            ) : quizPhase === 'zooming' || quizPhase === 'transitioning' ? (
+              /* Entering compound placeholder */
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    border: '2px solid rgba(215,255,0,0.3)',
+                    borderTopColor: 'var(--tgl-lime)',
+                    animation: 'spin 1s linear infinite',
+                  }}
+                />
+                <p style={{ fontSize: 12, color: 'rgba(215,255,0,0.5)', fontFamily: 'var(--font-space)', textAlign: 'center', lineHeight: 1.6 }}>
+                  Entering compound…
+                </p>
+              </div>
             ) : dropZones.length === 0 ? (
-              /* No landmarks configured yet */
+              /* No landmarks */
               <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">
                 <div style={{ fontSize: 28 }}>📍</div>
                 <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-montserrat)', lineHeight: 1.6 }}>
@@ -304,7 +385,7 @@ export default function Phase1Page() {
                 </button>
               </div>
             ) : submitted ? (
-              /* Results state */
+              /* Results */
               <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
                 <div
                   className="text-4xl font-black"
@@ -317,9 +398,7 @@ export default function Phase1Page() {
                   {correctCount}/{dropZones.length}
                 </div>
                 <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                  {correctCount === dropZones.length
-                    ? 'Perfect!'
-                    : `${dropZones.length - correctCount} wrong`}
+                  {correctCount === dropZones.length ? 'Perfect!' : `${dropZones.length - correctCount} wrong`}
                 </p>
                 <button
                   onClick={handleContinue}
@@ -337,8 +416,14 @@ export default function Phase1Page() {
                 </button>
               </div>
             ) : (
+              /* Drag labels + submit */
               <>
-                {/* Answer cards */}
+                <p
+                  className="text-xs font-bold uppercase tracking-widest mb-1 shrink-0"
+                  style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)' }}
+                >
+                  Landmarks
+                </p>
                 <div className="flex flex-col gap-2 flex-1">
                   {dropZones.map((zone, i) => (
                     <DraggableAnswer
@@ -349,12 +434,10 @@ export default function Phase1Page() {
                     />
                   ))}
                 </div>
-
-                {/* Submit button */}
                 <button
                   disabled={!allPlaced}
                   onClick={() => allPlaced && setSubmitted(true)}
-                  className="mt-3 w-full py-3 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95"
+                  className="mt-3 w-full py-3 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 shrink-0"
                   style={{
                     fontFamily: 'var(--font-space)',
                     background: allPlaced ? 'var(--tgl-lime)' : 'rgba(215,255,0,0.06)',

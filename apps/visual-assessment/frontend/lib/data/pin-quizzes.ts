@@ -3,17 +3,15 @@ import type { Question } from './questions';
 export interface PinQuizData {
   landmarkId: string;
   masterPlanImage: string;
-  overlayBounds: [[number, number], [number, number]];
-  focusBounds: [[number, number], [number, number]];
+  focusPoint: { lat: number; lng: number; zoom: number };
   questions: Question[];
 }
 
 export const PIN_QUIZZES: PinQuizData[] = [
   {
     landmarkId: 'sh-4',
-    masterPlanImage: '/marsa-baghoush.jpeg',
-    overlayBounds: [[31.175, 27.652], [31.180, 27.662]],
-    focusBounds: [[31.172, 27.645], [31.183, 27.670]],
+    masterPlanImage: '/marsa-baghoush.png',
+    focusPoint: { lat: 31.1774707, lng: 27.656592, zoom: 17 },
     questions: [
       {
         id: 'mb-q1',

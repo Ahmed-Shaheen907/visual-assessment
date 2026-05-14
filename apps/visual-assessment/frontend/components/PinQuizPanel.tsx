@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, CSSProperties } from 'react';
 import type { PinQuizData } from '@/lib/data/pin-quizzes';
 
 interface PinQuizPanelProps {
@@ -10,74 +10,185 @@ interface PinQuizPanelProps {
 }
 
 export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPanelProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [cardStyle, setCardStyle] = useState<CSSProperties>({
+    transform: 'translateX(0)',
+    opacity: 1,
+  });
+  const [advancing, setAdvancing] = useState(false);
 
-  const allAnswered = quiz.questions.every((q) => answers[q.id]?.trim());
+  const q = quiz.questions[currentIndex];
+  const isLast = currentIndex === quiz.questions.length - 1;
+  const currentAnswer = answers[q?.id ?? ''] ?? '';
+
+  const advance = useCallback(() => {
+    if (advancing) return;
+    setAdvancing(true);
+    // Slide current card out to the left
+    setCardStyle({ transform: 'translateX(-60px)', opacity: 0, transition: 'transform 0.25s ease, opacity 0.2s ease' });
+    setTimeout(() => {
+      setCurrentIndex((i) => i + 1);
+      // Place next card off-screen to the right (no transition)
+      setCardStyle({ transform: 'translateX(40px)', opacity: 0, transition: 'none' });
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          // Slide in from the right with spring
+          setCardStyle({
+            transform: 'translateX(0)',
+            opacity: 1,
+            transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease',
+          });
+          setAdvancing(false);
+        })
+      );
+    }, 260);
+  }, [advancing]);
 
   function setAnswer(id: string, value: string) {
     setAnswers((prev) => ({ ...prev, [id]: value }));
   }
 
-  return (
-    <div className="flex flex-col gap-3 flex-1 min-h-0">
-      <p
-        className="text-xs font-bold uppercase tracking-widest mb-1"
-        style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)' }}
-      >
-        Compound Quiz
-      </p>
+  function handleSelect(id: string, value: string) {
+    setAnswer(id, value);
+    if (!isLast) {
+      setTimeout(advance, 350);
+    }
+  }
 
-      <div className="flex flex-col gap-3 flex-1 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(215,255,0,0.2) transparent' }}>
-        {quiz.questions.map((q, i) => (
+  function handleContinue() {
+    if (isLast) {
+      onSubmit({ ...answers });
+    } else {
+      advance();
+    }
+  }
+
+  if (!q) return null;
+
+  const dotColors = quiz.questions.map((_, i) =>
+    i < currentIndex
+      ? 'var(--tgl-lime)'
+      : i === currentIndex
+      ? 'rgba(215,255,0,0.55)'
+      : 'rgba(255,255,255,0.15)'
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, gap: 16 }}>
+
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 800,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'rgba(215,255,0,0.6)',
+            fontFamily: 'var(--font-space)',
+          }}
+        >
+          Compound Quiz
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-space)' }}>
+            {currentIndex + 1} / {quiz.questions.length}
+          </span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {dotColors.map((color, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  background: color,
+                  transition: 'background 0.3s ease',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Animated question card */}
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+        <div style={{ ...cardStyle, height: '100%' }}>
           <div
-            key={q.id}
-            className="rounded-lg p-3"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(215,255,0,0.1)' }}
+            style={{
+              borderRadius: 12,
+              padding: 20,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(215,255,0,0.12)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+              height: '100%',
+              boxSizing: 'border-box',
+            }}
           >
             <p
-              className="text-xs font-bold mb-2 leading-snug"
-              style={{ color: 'var(--tgl-white)', fontFamily: 'var(--font-space)' }}
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                lineHeight: 1.5,
+                color: 'var(--tgl-white)',
+                fontFamily: 'var(--font-space)',
+                margin: 0,
+              }}
             >
-              <span style={{ color: 'rgba(215,255,0,0.5)', marginRight: 6 }}>{i + 1}.</span>
               {q.question}
             </p>
 
             {q.type === 'freetext' && (
               <textarea
-                rows={3}
-                value={answers[q.id] ?? ''}
+                rows={4}
+                value={currentAnswer}
                 onChange={(e) => setAnswer(q.id, e.target.value)}
                 placeholder="Type your answer…"
-                className="w-full rounded-md px-2 py-1.5 text-xs resize-none outline-none"
                 style={{
+                  width: '100%',
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                  fontSize: 13,
+                  resize: 'none',
+                  outline: 'none',
                   background: 'rgba(255,255,255,0.06)',
-                  border: answers[q.id]?.trim()
-                    ? '1px solid rgba(215,255,0,0.35)'
+                  border: currentAnswer.trim()
+                    ? '1px solid rgba(215,255,0,0.4)'
                     : '1px solid rgba(255,255,255,0.1)',
                   color: 'var(--tgl-white)',
                   fontFamily: 'var(--font-montserrat)',
                   lineHeight: 1.6,
                   transition: 'border-color 0.15s',
+                  boxSizing: 'border-box',
                 }}
               />
             )}
 
             {q.type === 'truefalse' && (
-              <div className="flex gap-2">
+              <div style={{ display: 'flex', gap: 10 }}>
                 {['true', 'false'].map((opt) => {
-                  const selected = answers[q.id] === opt;
+                  const selected = currentAnswer === opt;
                   return (
                     <button
                       key={opt}
-                      onClick={() => setAnswer(q.id, opt)}
-                      className="flex-1 py-1.5 rounded-md text-xs font-bold capitalize transition-all duration-150 active:scale-95"
+                      onClick={() => handleSelect(q.id, opt)}
                       style={{
-                        background: selected ? 'var(--tgl-lime)' : 'rgba(255,255,255,0.06)',
-                        color: selected ? '#000' : 'rgba(255,255,255,0.55)',
-                        border: selected ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                        boxShadow: selected ? '0 0 8px rgba(215,255,0,0.4)' : 'none',
+                        flex: 1,
+                        padding: '12px 0',
+                        borderRadius: 10,
+                        fontSize: 13,
+                        fontWeight: 700,
                         fontFamily: 'var(--font-space)',
                         cursor: 'pointer',
+                        transition: 'background 0.15s, box-shadow 0.15s, transform 0.1s',
+                        transform: selected ? 'scale(1.02)' : 'scale(1)',
+                        background: selected ? 'var(--tgl-lime)' : 'rgba(255,255,255,0.06)',
+                        color: selected ? '#000' : 'rgba(255,255,255,0.6)',
+                        border: selected ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                        boxShadow: selected ? '0 0 12px rgba(215,255,0,0.5)' : 'none',
                       }}
                     >
                       {opt === 'true' ? 'True' : 'False'}
@@ -88,20 +199,27 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
             )}
 
             {q.type === 'mcq' && (
-              <div className="flex flex-col gap-1.5">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {q.options?.map((opt) => {
-                  const selected = answers[q.id] === opt;
+                  const selected = currentAnswer === opt;
                   return (
                     <button
                       key={opt}
-                      onClick={() => setAnswer(q.id, opt)}
-                      className="w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-all duration-150 active:scale-[0.98]"
+                      onClick={() => handleSelect(q.id, opt)}
                       style={{
-                        background: selected ? 'rgba(215,255,0,0.12)' : 'rgba(255,255,255,0.04)',
-                        color: selected ? 'var(--tgl-lime)' : 'rgba(255,255,255,0.6)',
-                        border: selected ? '1px solid rgba(215,255,0,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '11px 14px',
+                        borderRadius: 10,
+                        fontSize: 13,
                         fontFamily: 'var(--font-montserrat)',
                         cursor: 'pointer',
+                        transition: 'background 0.15s, color 0.15s, transform 0.1s',
+                        transform: selected ? 'scale(1.01)' : 'scale(1)',
+                        background: selected ? 'rgba(215,255,0,0.14)' : 'rgba(255,255,255,0.04)',
+                        color: selected ? 'var(--tgl-lime)' : 'rgba(255,255,255,0.65)',
+                        border: selected ? '1px solid rgba(215,255,0,0.45)' : '1px solid rgba(255,255,255,0.08)',
+                        boxShadow: selected ? '0 0 10px rgba(215,255,0,0.15)' : 'none',
                       }}
                     >
                       {opt}
@@ -111,24 +229,41 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
               </div>
             )}
           </div>
-        ))}
+        </div>
       </div>
 
-      <button
-        disabled={!allAnswered || submitting}
-        onClick={() => allAnswered && !submitting && onSubmit(answers)}
-        className="mt-1 w-full py-2.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 shrink-0"
-        style={{
-          fontFamily: 'var(--font-space)',
-          background: allAnswered && !submitting ? 'var(--tgl-lime)' : 'rgba(215,255,0,0.06)',
-          color: allAnswered && !submitting ? '#000' : 'rgba(215,255,0,0.3)',
-          border: allAnswered && !submitting ? 'none' : '1px solid rgba(215,255,0,0.15)',
-          boxShadow: allAnswered && !submitting ? 'var(--glow-lime)' : 'none',
-          cursor: allAnswered && !submitting ? 'pointer' : 'not-allowed',
-        }}
-      >
-        {submitting ? 'Saving…' : allAnswered ? '✓ Submit Quiz' : `${Object.keys(answers).filter(k => answers[k]?.trim()).length}/${quiz.questions.length} Answered`}
-      </button>
+      {/* Continue / Submit — only for freetext or last question */}
+      {(q.type === 'freetext' || isLast) && (
+        <button
+          disabled={!currentAnswer.trim() || submitting || advancing}
+          onClick={handleContinue}
+          style={{
+            flexShrink: 0,
+            width: '100%',
+            padding: '13px 0',
+            borderRadius: 10,
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: 'var(--font-space)',
+            cursor: currentAnswer.trim() && !submitting && !advancing ? 'pointer' : 'not-allowed',
+            transition: 'background 0.2s, box-shadow 0.2s',
+            background: currentAnswer.trim() && !submitting && !advancing
+              ? 'var(--tgl-lime)'
+              : 'rgba(215,255,0,0.06)',
+            color: currentAnswer.trim() && !submitting && !advancing
+              ? '#000'
+              : 'rgba(215,255,0,0.3)',
+            border: currentAnswer.trim() && !submitting && !advancing
+              ? 'none'
+              : '1px solid rgba(215,255,0,0.15)',
+            boxShadow: currentAnswer.trim() && !submitting && !advancing
+              ? 'var(--glow-lime)'
+              : 'none',
+          }}
+        >
+          {submitting ? 'Saving…' : isLast ? '✓ Submit Quiz' : 'Continue →'}
+        </button>
+      )}
     </div>
   );
 }

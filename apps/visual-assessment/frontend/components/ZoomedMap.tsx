@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { MapContainer, TileLayer, ImageOverlay, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { useDroppable } from '@dnd-kit/core';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -20,20 +20,58 @@ const LANDMARK_COLORS = [
   '#8b5cf6', '#ec4899',
 ];
 
-function FlyController({ bounds }: { bounds: L.LatLngBoundsExpression }) {
+export type QuizPhase = 'idle' | 'zooming' | 'transitioning' | 'active';
+
+// ─── FlyController ────────────────────────────────────────────────────────────
+
+function FlyController({
+  bounds,
+  target,
+}: {
+  bounds: L.LatLngBoundsExpression;
+  target?: { lat: number; lng: number; zoom: number };
+}) {
   const map = useMap();
   const prevKey = useRef('');
 
   useEffect(() => {
-    const key = JSON.stringify(bounds);
-    if (key !== prevKey.current) {
-      prevKey.current = key;
-      map.flyToBounds(bounds as L.LatLngBoundsExpression, { duration: 1.5, padding: [40, 40], maxZoom: 14 });
+    const key = target
+      ? `pt:${target.lat},${target.lng},${target.zoom}`
+      : JSON.stringify(bounds);
+    if (key === prevKey.current) return;
+    prevKey.current = key;
+    if (target) {
+      map.flyTo([target.lat, target.lng], target.zoom, { duration: 1.8, easeLinearity: 0.25 });
+    } else {
+      map.flyToBounds(bounds, { duration: 1.5, padding: [40, 40], maxZoom: 14 });
     }
-  }, [map, bounds]);
+  }, [map, bounds, target]);
 
   return null;
 }
+
+// ─── MapLocker ────────────────────────────────────────────────────────────────
+
+function MapLocker({ locked }: { locked: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    const handlers = [
+      map.dragging,
+      map.scrollWheelZoom,
+      map.doubleClickZoom,
+      map.touchZoom,
+      map.keyboard,
+    ] as Array<{ enable(): void; disable(): void }>;
+    if (locked) {
+      handlers.forEach((h) => h.disable());
+    } else {
+      handlers.forEach((h) => h.enable());
+    }
+  }, [map, locked]);
+  return null;
+}
+
+// ─── MapTracker ───────────────────────────────────────────────────────────────
 
 function MapTracker({
   dropZones,
@@ -62,12 +100,15 @@ function MapTracker({
   return null;
 }
 
+// ─── DroppablePin ─────────────────────────────────────────────────────────────
+
 function DroppablePin({
   zone,
   index,
   pos,
   submitted,
   hasQuiz,
+  hiddenPinId,
   onRemove,
   onPinClick,
 }: {
@@ -76,6 +117,7 @@ function DroppablePin({
   pos: { x: number; y: number } | undefined;
   submitted: boolean;
   hasQuiz: boolean;
+  hiddenPinId?: string | null;
   onRemove?: (zoneId: string) => void;
   onPinClick?: (zoneId: string) => void;
 }) {
@@ -86,10 +128,9 @@ function DroppablePin({
   const isCorrect = submitted && zone.accepted === zone.label;
   const isWrong = submitted && answered && zone.accepted !== zone.label;
   const pinColor = isCorrect ? '#D7FF00' : isWrong ? '#ef4444' : baseColor;
-
-  if (!pos) return null;
-
   const canClick = hasQuiz && !submitted && !answered;
+
+  if (!pos || zone.id === hiddenPinId) return null;
 
   return (
     <div
@@ -164,7 +205,7 @@ function DroppablePin({
 
       {answered && (
         <div
-          onClick={!submitted && onRemove ? () => onRemove(zone.id) : undefined}
+          onClick={!submitted && onRemove ? (e) => { e.stopPropagation(); onRemove(zone.id); } : undefined}
           style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: submitted ? (isCorrect ? '#D7FF00' : '#ef4444') : 'rgba(255,255,255,0.15)', color: submitted ? (isCorrect ? '#000' : '#fff') : '#fff', fontSize: 9, fontWeight: 700, padding: submitted ? '2px 8px' : '2px 6px 2px 8px', borderRadius: 4, whiteSpace: 'nowrap', boxShadow: submitted ? (isCorrect ? '0 0 10px rgba(215,255,0,0.5)' : '0 0 10px rgba(239,68,68,0.5)') : 'none', border: submitted ? 'none' : '1px solid rgba(255,255,255,0.2)', pointerEvents: submitted ? 'none' : 'all', cursor: submitted ? 'default' : 'pointer', fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)', letterSpacing: '0.02em', transition: 'background 0.3s, color 0.3s', display: 'flex', alignItems: 'center', gap: 4 }}
         >
           {submitted && isWrong ? zone.label : zone.accepted}
@@ -175,6 +216,8 @@ function DroppablePin({
   );
 }
 
+// ─── ZoomedMap ────────────────────────────────────────────────────────────────
+
 interface ZoomedMapProps {
   bounds: [[number, number], [number, number]];
   dropZones: DropZone[];
@@ -182,8 +225,9 @@ interface ZoomedMapProps {
   onRemove?: (zoneId: string) => void;
   onPinClick?: (zoneId: string) => void;
   quizPinIds?: Set<string>;
-  overlayImage?: string;
-  overlayBounds?: [[number, number], [number, number]];
+  quizPhase: QuizPhase;
+  activePinTarget?: { lat: number; lng: number; zoom: number };
+  hiddenPinId?: string | null;
 }
 
 export default function ZoomedMap({
@@ -193,52 +237,66 @@ export default function ZoomedMap({
   onRemove,
   onPinClick,
   quizPinIds,
-  overlayImage,
-  overlayBounds,
+  quizPhase,
+  activePinTarget,
+  hiddenPinId,
 }: ZoomedMapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const handlePositions = useCallback((pos: Record<string, { x: number; y: number }>) => setPositions(pos), []);
 
+  const mapFaded = quizPhase === 'transitioning' || quizPhase === 'active';
+
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>
-      <MapContainer
-        center={[31.05, 28.2]}
-        zoom={9}
-        minZoom={4}
-        maxZoom={17}
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={true}
-        zoomControl={true}
+      {/* Leaflet map layer — fades out when quiz activates */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          opacity: mapFaded ? 0 : 1,
+          transition: 'opacity 0.8s ease',
+          pointerEvents: mapFaded ? 'none' : 'auto',
+        }}
       >
-        <TileLayer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          attribution='Tiles &copy; Esri &mdash; Source: Esri, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-          maxZoom={19}
-          maxNativeZoom={19}
-        />
-        {overlayImage && overlayBounds && (
-          <ImageOverlay
-            url={overlayImage}
-            bounds={overlayBounds as L.LatLngBoundsExpression}
-            opacity={0.6}
+        <MapContainer
+          center={[31.05, 28.2]}
+          zoom={9}
+          minZoom={4}
+          maxZoom={17}
+          style={{ height: '100%', width: '100%' }}
+          scrollWheelZoom={true}
+          zoomControl={true}
+        >
+          <TileLayer
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            attribution='Tiles &copy; Esri &mdash; Source: Esri, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            maxZoom={19}
+            maxNativeZoom={19}
           />
-        )}
-        <FlyController bounds={bounds} />
-        <MapTracker dropZones={dropZones} onPositionsUpdate={handlePositions} />
-      </MapContainer>
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        {dropZones.map((zone, i) => (
-          <DroppablePin
-            key={zone.id}
-            zone={zone}
-            index={i}
-            pos={positions[zone.id]}
-            submitted={submitted}
-            hasQuiz={quizPinIds?.has(zone.id) ?? false}
-            onRemove={onRemove}
-            onPinClick={onPinClick}
+          <FlyController
+            bounds={bounds as L.LatLngBoundsExpression}
+            target={quizPhase === 'zooming' ? activePinTarget : undefined}
           />
-        ))}
+          <MapLocker locked={quizPhase !== 'idle'} />
+          <MapTracker dropZones={dropZones} onPositionsUpdate={handlePositions} />
+        </MapContainer>
+
+        {/* Pin overlay — sits above the Leaflet canvas */}
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          {dropZones.map((zone, i) => (
+            <DroppablePin
+              key={zone.id}
+              zone={zone}
+              index={i}
+              pos={positions[zone.id]}
+              submitted={submitted}
+              hasQuiz={quizPinIds?.has(zone.id) ?? false}
+              hiddenPinId={hiddenPinId}
+              onRemove={onRemove}
+              onPinClick={onPinClick}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -36,6 +36,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth', request.url));
   }
 
+  // Admin account goes straight to admin dashboard; block them from game routes
+  const ADMIN_EMAIL = 'manager@gmail.com';
+  if (user.email === ADMIN_EMAIL) {
+    if (!pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+    return supabaseResponse;
+  }
+
   return supabaseResponse;
 }
 

@@ -94,6 +94,7 @@ function DroppablePin({
   return (
     <div
       ref={setNodeRef}
+      onClick={canClick ? () => onPinClick?.(zone.id) : undefined}
       style={{
         position: 'absolute',
         left: pos.x,
@@ -101,6 +102,7 @@ function DroppablePin({
         transform: 'translate(-50%, -50%)',
         zIndex: 1000,
         pointerEvents: 'all',
+        cursor: canClick ? 'pointer' : 'default',
       }}
     >
       {/* Outer glow ring */}
@@ -109,7 +111,6 @@ function DroppablePin({
       <div style={{ position: 'absolute', width: 62, height: 62, borderRadius: '50%', left: '50%', top: '50%', transform: isOver ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%)', border: `2px solid ${pinColor}`, opacity: isOver ? 1 : answered ? 0.5 : 0.65, boxShadow: isOver ? `0 0 16px ${pinColor}88` : answered ? `0 0 10px ${pinColor}44` : 'none', transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s', pointerEvents: 'none' }} />
       {/* Center circle */}
       <div
-        onClick={canClick ? () => onPinClick?.(zone.id) : undefined}
         style={{
           width: 36,
           height: 36,
@@ -124,7 +125,6 @@ function DroppablePin({
           transition: 'background 0.25s, transform 0.15s',
           transform: isOver ? 'scale(1.15)' : 'scale(1)',
           animation: answered || submitted ? 'none' : 'pin-pulse 2.5s ease-in-out infinite',
-          cursor: canClick ? 'pointer' : 'default',
         }}
       >
         {submitted ? (
@@ -141,19 +141,19 @@ function DroppablePin({
         <div
           style={{
             position: 'absolute',
-            top: -6,
-            right: -6,
-            width: 16,
-            height: 16,
+            top: -10,
+            right: -10,
+            width: 22,
+            height: 22,
             borderRadius: '50%',
             background: 'var(--tgl-lime)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 9,
+            fontSize: 11,
             fontWeight: 900,
             color: '#000',
-            boxShadow: '0 0 8px rgba(215,255,0,0.6)',
+            boxShadow: '0 0 10px rgba(215,255,0,0.8), 0 0 20px rgba(215,255,0,0.3)',
             pointerEvents: 'none',
             fontFamily: 'var(--font-space)',
           }}

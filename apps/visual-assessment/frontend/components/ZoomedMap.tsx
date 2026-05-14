@@ -246,7 +246,7 @@ function DroppablePin({
           style={{ position: 'absolute', top: 64, left: '50%', transform: 'translateX(-50%)', background: submitted ? (isCorrect ? '#D7FF00' : '#ef4444') : 'rgba(8, 10, 20, 0.88)', color: submitted ? (isCorrect ? '#000' : '#fff') : '#fff', fontSize: 9, fontWeight: 700, padding: submitted ? '2px 8px' : '2px 6px 2px 8px', borderRadius: 4, whiteSpace: 'nowrap', boxShadow: submitted ? (isCorrect ? '0 0 10px rgba(215,255,0,0.5)' : '0 0 10px rgba(239,68,68,0.5)') : '0 2px 10px rgba(0,0,0,0.5)', border: submitted ? 'none' : '1px solid rgba(215,255,0,0.3)', pointerEvents: submitted ? 'none' : 'all', cursor: submitted ? 'default' : 'pointer', fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)', letterSpacing: '0.02em', transition: 'background 0.3s, color 0.3s', display: 'flex', alignItems: 'center', gap: 4 }}
         >
           {submitted && isWrong ? zone.label : zone.accepted}
-          {!submitted && <span style={{ fontSize: 10, lineHeight: 1, opacity: 0.6, fontWeight: 900, marginTop: -1 }}>×</span>}
+          {!submitted && <span style={{ fontSize: 14, lineHeight: 1, opacity: 0.85, fontWeight: 900, marginTop: -1 }}>×</span>}
         </div>
       )}
     </div>

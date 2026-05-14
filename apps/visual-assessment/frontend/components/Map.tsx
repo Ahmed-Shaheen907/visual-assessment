@@ -225,7 +225,7 @@ function DroppablePin({
         >
           {submitted && isWrong ? zone.label : zone.accepted}
           {!submitted && (
-            <span style={{ fontSize: 10, lineHeight: 1, opacity: 0.6, fontWeight: 900, marginTop: -1 }}>×</span>
+            <span style={{ fontSize: 14, lineHeight: 1, opacity: 0.85, fontWeight: 900, marginTop: -1 }}>×</span>
           )}
         </div>
       )}

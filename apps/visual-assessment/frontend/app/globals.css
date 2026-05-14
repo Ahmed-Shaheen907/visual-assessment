@@ -58,3 +58,8 @@ body {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+
+@keyframes star-blink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 10px rgba(215,255,0,0.8), 0 0 20px rgba(215,255,0,0.3); }
+  50%       { opacity: 0.2; box-shadow: 0 0 3px rgba(215,255,0,0.2); }
+}

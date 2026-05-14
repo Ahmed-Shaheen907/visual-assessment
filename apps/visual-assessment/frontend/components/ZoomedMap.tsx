@@ -109,6 +109,8 @@ function DroppablePin({
   submitted,
   hasQuiz,
   hiddenPinId,
+  completedQuizPinIds,
+  blinkingPinId,
   onRemove,
   onPinClick,
 }: {
@@ -118,6 +120,8 @@ function DroppablePin({
   submitted: boolean;
   hasQuiz: boolean;
   hiddenPinId?: string | null;
+  completedQuizPinIds: Set<string>;
+  blinkingPinId?: string | null;
   onRemove?: (zoneId: string) => void;
   onPinClick?: (zoneId: string) => void;
 }) {
@@ -128,7 +132,9 @@ function DroppablePin({
   const isCorrect = submitted && zone.accepted === zone.label;
   const isWrong = submitted && answered && zone.accepted !== zone.label;
   const pinColor = isCorrect ? '#D7FF00' : isWrong ? '#ef4444' : baseColor;
-  const canClick = hasQuiz && !submitted && !answered;
+  const quizDone = completedQuizPinIds.has(zone.id);
+  const canClick = hasQuiz && !submitted && !quizDone;
+  const isBlinking = blinkingPinId === zone.id && canClick;
 
   if (!pos || zone.id === hiddenPinId) return null;
 
@@ -177,9 +183,10 @@ function DroppablePin({
         )}
       </div>
 
-      {/* Quiz indicator badge */}
+      {/* Quiz indicator badge — own pointerEvents so the full badge area is clickable even outside parent bounds */}
       {canClick && (
         <div
+          onClick={(e) => { e.stopPropagation(); onPinClick?.(zone.id); }}
           style={{
             position: 'absolute',
             top: -10,
@@ -195,8 +202,10 @@ function DroppablePin({
             fontWeight: 900,
             color: '#000',
             boxShadow: '0 0 10px rgba(215,255,0,0.8), 0 0 20px rgba(215,255,0,0.3)',
-            pointerEvents: 'none',
+            pointerEvents: 'all',
+            cursor: 'pointer',
             fontFamily: 'var(--font-space)',
+            animation: isBlinking ? 'star-blink 0.8s ease-in-out infinite' : 'none',
           }}
         >
           ✦
@@ -206,7 +215,7 @@ function DroppablePin({
       {answered && (
         <div
           onClick={!submitted && onRemove ? (e) => { e.stopPropagation(); onRemove(zone.id); } : undefined}
-          style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: submitted ? (isCorrect ? '#D7FF00' : '#ef4444') : 'rgba(255,255,255,0.15)', color: submitted ? (isCorrect ? '#000' : '#fff') : '#fff', fontSize: 9, fontWeight: 700, padding: submitted ? '2px 8px' : '2px 6px 2px 8px', borderRadius: 4, whiteSpace: 'nowrap', boxShadow: submitted ? (isCorrect ? '0 0 10px rgba(215,255,0,0.5)' : '0 0 10px rgba(239,68,68,0.5)') : 'none', border: submitted ? 'none' : '1px solid rgba(255,255,255,0.2)', pointerEvents: submitted ? 'none' : 'all', cursor: submitted ? 'default' : 'pointer', fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)', letterSpacing: '0.02em', transition: 'background 0.3s, color 0.3s', display: 'flex', alignItems: 'center', gap: 4 }}
+          style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: submitted ? (isCorrect ? '#D7FF00' : '#ef4444') : 'rgba(8, 10, 20, 0.88)', color: submitted ? (isCorrect ? '#000' : '#fff') : '#fff', fontSize: 9, fontWeight: 700, padding: submitted ? '2px 8px' : '2px 6px 2px 8px', borderRadius: 4, whiteSpace: 'nowrap', boxShadow: submitted ? (isCorrect ? '0 0 10px rgba(215,255,0,0.5)' : '0 0 10px rgba(239,68,68,0.5)') : '0 2px 10px rgba(0,0,0,0.5)', border: submitted ? 'none' : '1px solid rgba(215,255,0,0.3)', pointerEvents: submitted ? 'none' : 'all', cursor: submitted ? 'default' : 'pointer', fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)', letterSpacing: '0.02em', transition: 'background 0.3s, color 0.3s', display: 'flex', alignItems: 'center', gap: 4 }}
         >
           {submitted && isWrong ? zone.label : zone.accepted}
           {!submitted && <span style={{ fontSize: 10, lineHeight: 1, opacity: 0.6, fontWeight: 900, marginTop: -1 }}>×</span>}
@@ -228,6 +237,8 @@ interface ZoomedMapProps {
   quizPhase: QuizPhase;
   activePinTarget?: { lat: number; lng: number; zoom: number };
   hiddenPinId?: string | null;
+  completedQuizPinIds?: Set<string>;
+  blinkingPinId?: string | null;
 }
 
 export default function ZoomedMap({
@@ -240,6 +251,8 @@ export default function ZoomedMap({
   quizPhase,
   activePinTarget,
   hiddenPinId,
+  completedQuizPinIds = new Set(),
+  blinkingPinId,
 }: ZoomedMapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const handlePositions = useCallback((pos: Record<string, { x: number; y: number }>) => setPositions(pos), []);
@@ -292,6 +305,8 @@ export default function ZoomedMap({
               submitted={submitted}
               hasQuiz={quizPinIds?.has(zone.id) ?? false}
               hiddenPinId={hiddenPinId}
+              completedQuizPinIds={completedQuizPinIds}
+              blinkingPinId={blinkingPinId}
               onRemove={onRemove}
               onPinClick={onPinClick}
             />

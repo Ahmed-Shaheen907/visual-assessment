@@ -48,6 +48,9 @@ export default function Phase1Page() {
   const [activePinQuizId, setActivePinQuizId] = useState<string | null>(null);
   const [activePinTarget, setActivePinTarget] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
+  const [completedQuizPinIds, setCompletedQuizPinIds] = useState<Set<string>>(new Set());
+  const [starBlinking, setStarBlinking] = useState(false);
+  const [showQuizPrompt, setShowQuizPrompt] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -69,6 +72,12 @@ export default function Phase1Page() {
 
   const placedLabels = dropZones.map((z) => z.accepted).filter(Boolean) as string[];
   const allPlaced = dropZones.length === 0 || placedLabels.length === dropZones.length;
+  const sectionQuizPinIds = section.landmarks
+    .filter((lm) => quizPinIds.has(lm.id))
+    .map((lm) => lm.id);
+  const allSectionQuizDone =
+    sectionQuizPinIds.length === 0 ||
+    sectionQuizPinIds.every((id) => completedQuizPinIds.has(id));
   const correctCount = dropZones.filter((z) => z.accepted === z.label).length;
   const activeAnswer = dropZones
     .map((z, i) => ({ id: `ans-${i}`, label: z.label }))
@@ -104,6 +113,8 @@ export default function Phase1Page() {
     const quiz = PIN_QUIZZES.find((q) => q.landmarkId === zoneId);
     if (!quiz) return;
 
+    setStarBlinking(false);
+    setShowQuizPrompt(false);
     setActivePinQuizId(zoneId);       // pin disappears immediately (hiddenPinId)
     setActivePinTarget(quiz.focusPoint);
     setQuizPhase('zooming');
@@ -130,6 +141,9 @@ export default function Phase1Page() {
       })));
     }
     setQuizSubmitting(false);
+    setCompletedQuizPinIds((prev) => new Set([...prev, activePinQuizId!]));
+    setStarBlinking(false);
+    setShowQuizPrompt(false);
     // Reset everything — layout transitions back via CSS
     setQuizPhase('idle');
     setActivePinQuizId(null);
@@ -158,6 +172,8 @@ export default function Phase1Page() {
         setDropZones(buildZones(nextIdx));
         setSubmitted(false);
         setTransitioning(false);
+        setStarBlinking(false);
+        setShowQuizPrompt(false);
       }, 1800);
     } else {
       router.push('/quiz');
@@ -265,6 +281,8 @@ export default function Phase1Page() {
               quizPhase={quizPhase}
               activePinTarget={activePinTarget ?? undefined}
               hiddenPinId={activePinQuizId}
+              completedQuizPinIds={completedQuizPinIds}
+              blinkingPinId={starBlinking ? (sectionQuizPinIds.find((id) => !completedQuizPinIds.has(id)) ?? null) : null}
             />
 
             {/* Masterplan PNG — mounts during 'transitioning' so opacity transition fires correctly */}
@@ -359,7 +377,7 @@ export default function Phase1Page() {
                   }}
                 />
                 <p style={{ fontSize: 12, color: 'rgba(215,255,0,0.5)', fontFamily: 'var(--font-space)', textAlign: 'center', lineHeight: 1.6 }}>
-                  Entering compound…
+                  Entering project…
                 </p>
               </div>
             ) : dropZones.length === 0 ? (
@@ -435,8 +453,15 @@ export default function Phase1Page() {
                   ))}
                 </div>
                 <button
-                  disabled={!allPlaced}
-                  onClick={() => allPlaced && setSubmitted(true)}
+                  onClick={() => {
+                    if (!allPlaced) return;
+                    if (!allSectionQuizDone) {
+                      setStarBlinking(true);
+                      setShowQuizPrompt(true);
+                      return;
+                    }
+                    setSubmitted(true);
+                  }}
                   className="mt-3 w-full py-3 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 shrink-0"
                   style={{
                     fontFamily: 'var(--font-space)',
@@ -449,6 +474,25 @@ export default function Phase1Page() {
                 >
                   {allPlaced ? '✓ Submit' : `${placedLabels.length}/${dropZones.length} Placed`}
                 </button>
+                {showQuizPrompt && !allSectionQuizDone && (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      background: 'rgba(215,255,0,0.06)',
+                      border: '1px solid rgba(215,255,0,0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <span style={{ color: 'var(--tgl-lime)', fontSize: 14, flexShrink: 0, animation: 'star-blink 0.8s ease-in-out infinite' }}>✦</span>
+                    <p style={{ color: 'rgba(215,255,0,0.7)', fontSize: 11, fontFamily: 'var(--font-space)', margin: 0, lineHeight: 1.5 }}>
+                      Click the ✦ star on the map to complete the project quiz first
+                    </p>
+                  </div>
+                )}
               </>
             )}
           </aside>

@@ -16,6 +16,7 @@ import {
 import DraggableAnswer from '@/components/DraggableAnswer';
 import type { DropZone } from '@/components/Map';
 import { saveAnswers } from '@/lib/supabase-helpers';
+import { cursorCollision } from '@/lib/utils/collision';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
@@ -37,6 +38,7 @@ export default function GamePage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -79,6 +81,23 @@ export default function GamePage() {
     setDropZones((prev) => prev.map((z) => z.id === zoneId ? { ...z, accepted: null } : z));
   }
 
+  function handleLabelSelect(labelId: string) {
+    if (submitted) return;
+    setSelectedLabelId((prev) => prev === labelId ? null : labelId);
+  }
+
+  function handleLabelPlace(zoneId: string) {
+    if (!selectedLabelId || submitted) return;
+    const answer = ANSWERS.find((a) => a.id === selectedLabelId);
+    if (!answer) return;
+    setDropZones((prev) => prev.map((z) => z.id === zoneId ? { ...z, accepted: answer.label } : z));
+    setSelectedLabelId(null);
+  }
+
+  function handleDeselectLabel() {
+    setSelectedLabelId(null);
+  }
+
   const handleContinue = useCallback(async () => {
     setSaving(true);
     const sessionId = localStorage.getItem('va_session_id');
@@ -94,7 +113,7 @@ export default function GamePage() {
   }, [dropZones, router]);
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={cursorCollision} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="min-h-screen flex flex-col" style={{ background: 'var(--tgl-black)' }}>
 
         {/* Header */}
@@ -179,7 +198,16 @@ export default function GamePage() {
               minHeight: 460,
             }}
           >
-            <Map center={[31.05, 28.2]} zoom={9} dropZones={dropZones} submitted={submitted} onRemove={handleRemove} />
+            <Map
+              center={[31.05, 28.2]}
+              zoom={9}
+              dropZones={dropZones}
+              submitted={submitted}
+              selectedLabelId={selectedLabelId}
+              onRemove={handleRemove}
+              onLabelPlace={handleLabelPlace}
+              onDeselectLabel={handleDeselectLabel}
+            />
           </div>
 
           {/* Sidebar */}
@@ -232,6 +260,8 @@ export default function GamePage() {
                       id={answer.id}
                       label={answer.label}
                       isPlaced={placedLabels.includes(answer.label)}
+                      isSelected={selectedLabelId === answer.id}
+                      onSelect={handleLabelSelect}
                     />
                   ))}
                 </div>

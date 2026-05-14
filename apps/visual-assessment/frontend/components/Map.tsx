@@ -30,7 +30,19 @@ const ZONE_COLORS: Record<string, string> = {
   'zone-6': '#10b981',
 };
 
-// Lives inside MapContainer — tracks pixel coords and reports them up
+// ─── MapClickHandler ──────────────────────────────────────────────────────────
+
+function MapClickHandler({ onMapClick }: { onMapClick: () => void }) {
+  const map = useMap();
+  useEffect(() => {
+    map.on('click', onMapClick);
+    return () => { map.off('click', onMapClick); };
+  }, [map, onMapClick]);
+  return null;
+}
+
+// ─── MapTracker ───────────────────────────────────────────────────────────────
+
 function MapTracker({
   dropZones,
   onPositionsUpdate,
@@ -60,19 +72,24 @@ function MapTracker({
   return null;
 }
 
-// Renders outside MapContainer to avoid Leaflet's overflow:hidden clipping
+// ─── DroppablePin ─────────────────────────────────────────────────────────────
+
 function DroppablePin({
   zone,
   index,
   pos,
   submitted,
+  selectedLabelId,
   onRemove,
+  onLabelPlace,
 }: {
   zone: DropZone;
   index: number;
   pos: { x: number; y: number } | undefined;
   submitted: boolean;
+  selectedLabelId?: string | null;
   onRemove?: (zoneId: string) => void;
+  onLabelPlace?: (zoneId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: zone.id });
   const baseColor = ZONE_COLORS[zone.id] ?? '#D7FF00';
@@ -80,22 +97,33 @@ function DroppablePin({
   const answered = !!zone.accepted;
   const isCorrect = submitted && zone.accepted === zone.label;
   const isWrong = submitted && answered && zone.accepted !== zone.label;
-
-  // After submit: green for correct, red for wrong; before submit: zone color
   const pinColor = isCorrect ? '#D7FF00' : isWrong ? '#ef4444' : baseColor;
+  const placementMode = !!selectedLabelId && !submitted;
 
   if (!pos) return null;
 
   return (
     <div
       ref={setNodeRef}
+      onClick={(e) => {
+        if (placementMode) {
+          e.stopPropagation();
+          onLabelPlace?.(zone.id);
+        }
+      }}
       style={{
         position: 'absolute',
         left: pos.x,
         top: pos.y,
+        width: 80,
+        height: 80,
         transform: 'translate(-50%, -50%)',
-        zIndex: 1000,
+        zIndex: 1001,
         pointerEvents: 'all',
+        cursor: placementMode ? 'crosshair' : 'default',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       {/* Outer glow halo */}
@@ -109,7 +137,7 @@ function DroppablePin({
           top: '50%',
           transform: 'translate(-50%, -50%)',
           background: `radial-gradient(circle, ${pinColor}33 0%, transparent 70%)`,
-          opacity: isOver ? 1 : answered ? 0.3 : 0.7,
+          opacity: isOver || placementMode ? 1 : answered ? 0.3 : 0.7,
           transition: 'opacity 0.2s',
           pointerEvents: 'none',
           animation: answered || submitted ? 'none' : 'pin-pulse-ring 2.5s ease-in-out infinite',
@@ -125,12 +153,11 @@ function DroppablePin({
           borderRadius: '50%',
           left: '50%',
           top: '50%',
-          transform: 'translate(-50%, -50%)',
+          transform: isOver ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%)',
           border: `2px solid ${pinColor}`,
           opacity: isOver ? 1 : answered ? 0.5 : 0.65,
           boxShadow: isOver ? `0 0 16px ${pinColor}88` : answered ? `0 0 10px ${pinColor}44` : 'none',
           transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s',
-          ...(isOver ? { transform: 'translate(-50%, -50%) scale(1.15)' } : {}),
           pointerEvents: 'none',
         }}
       />
@@ -166,16 +193,16 @@ function DroppablePin({
         )}
       </div>
 
-      {/* Answer badge — shown when a label is placed (before submit: removable, after: locked+colored) */}
+      {/* Answer badge */}
       {answered && (
         <div
-          onClick={!submitted && onRemove ? () => onRemove(zone.id) : undefined}
+          onClick={!submitted && onRemove ? (e) => { e.stopPropagation(); onRemove(zone.id); } : undefined}
           style={{
             position: 'absolute',
-            top: 'calc(100% + 6px)',
+            top: 64,
             left: '50%',
             transform: 'translateX(-50%)',
-            background: submitted ? (isCorrect ? '#D7FF00' : '#ef4444') : 'rgba(255,255,255,0.15)',
+            background: submitted ? (isCorrect ? '#D7FF00' : '#ef4444') : 'rgba(8, 10, 20, 0.88)',
             color: submitted ? (isCorrect ? '#000' : '#fff') : '#fff',
             fontSize: 9,
             fontWeight: 700,
@@ -184,8 +211,8 @@ function DroppablePin({
             whiteSpace: 'nowrap',
             boxShadow: submitted
               ? isCorrect ? '0 0 10px rgba(215,255,0,0.5)' : '0 0 10px rgba(239,68,68,0.5)'
-              : 'none',
-            border: submitted ? 'none' : '1px solid rgba(255,255,255,0.2)',
+              : '0 2px 10px rgba(0,0,0,0.5)',
+            border: submitted ? 'none' : '1px solid rgba(215,255,0,0.3)',
             pointerEvents: submitted ? 'none' : 'all',
             cursor: submitted ? 'default' : 'pointer',
             fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)',
@@ -198,17 +225,7 @@ function DroppablePin({
         >
           {submitted && isWrong ? zone.label : zone.accepted}
           {!submitted && (
-            <span
-              style={{
-                fontSize: 10,
-                lineHeight: 1,
-                opacity: 0.6,
-                fontWeight: 900,
-                marginTop: -1,
-              }}
-            >
-              ×
-            </span>
+            <span style={{ fontSize: 10, lineHeight: 1, opacity: 0.6, fontWeight: 900, marginTop: -1 }}>×</span>
           )}
         </div>
       )}
@@ -216,15 +233,29 @@ function DroppablePin({
   );
 }
 
+// ─── Map ──────────────────────────────────────────────────────────────────────
+
 interface MapProps {
   center: [number, number];
   zoom: number;
   dropZones: DropZone[];
   submitted: boolean;
+  selectedLabelId?: string | null;
   onRemove?: (zoneId: string) => void;
+  onLabelPlace?: (zoneId: string) => void;
+  onDeselectLabel?: () => void;
 }
 
-export default function Map({ center, zoom, dropZones, submitted, onRemove }: MapProps) {
+export default function Map({
+  center,
+  zoom,
+  dropZones,
+  submitted,
+  selectedLabelId,
+  onRemove,
+  onLabelPlace,
+  onDeselectLabel,
+}: MapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
 
   const handlePositions = useCallback((pos: Record<string, { x: number; y: number }>) => {
@@ -248,16 +279,24 @@ export default function Map({ center, zoom, dropZones, submitted, onRemove }: Ma
           maxZoom={19}
           maxNativeZoom={19}
         />
-        <MapTracker
-          dropZones={dropZones}
-          onPositionsUpdate={handlePositions}
-        />
+        <MapTracker dropZones={dropZones} onPositionsUpdate={handlePositions} />
+        {selectedLabelId && onDeselectLabel && (
+          <MapClickHandler onMapClick={onDeselectLabel} />
+        )}
       </MapContainer>
 
-      {/* Pin overlay — outside MapContainer so Leaflet's overflow:hidden doesn't clip pins */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {dropZones.map((zone, i) => (
-          <DroppablePin key={zone.id} zone={zone} index={i} pos={positions[zone.id]} submitted={submitted} onRemove={onRemove} />
+          <DroppablePin
+            key={zone.id}
+            zone={zone}
+            index={i}
+            pos={positions[zone.id]}
+            submitted={submitted}
+            selectedLabelId={selectedLabelId}
+            onRemove={onRemove}
+            onLabelPlace={onLabelPlace}
+          />
         ))}
       </div>
     </div>

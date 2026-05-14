@@ -68,6 +68,7 @@ export default function DashboardPage() {
       const sessionId = await createSession(profile.name, userEmail, userId);
       localStorage.setItem('va_session_id', sessionId);
       localStorage.setItem('va_agent_name', profile.name);
+      localStorage.setItem('va_user_email', userEmail);
       router.push('/game');
     } catch {
       setStarting(false);

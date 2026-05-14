@@ -12,6 +12,7 @@ export default function QuizPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<(string | null)[]>(Array(QUESTIONS.length).fill(null));
   const [finishing, setFinishing] = useState(false);
+  const isAdmin = typeof window !== 'undefined' && localStorage.getItem('va_user_email') === 'admin@gmail.com';
 
   const question = QUESTIONS[currentIndex];
   const answered = answers[currentIndex];
@@ -24,6 +25,26 @@ export default function QuizPage() {
       next[currentIndex] = answer;
       return next;
     });
+  }
+
+  async function handleSkip() {
+    setFinishing(true);
+    const sessionId = localStorage.getItem('va_session_id');
+    if (sessionId) {
+      await saveAnswers(
+        sessionId,
+        QUESTIONS.map((q, i) => ({
+          phase: 'phase2',
+          question_id: q.id,
+          answer_given: answers[i] ?? null,
+          correct: answers[i]
+            ? (q.type === 'freetext' ? true : answers[i]?.toLowerCase() === (q.answer as string).toLowerCase())
+            : false,
+        }))
+      );
+      await markSessionComplete(sessionId);
+      router.push(`/results/${sessionId}`);
+    }
   }
 
   async function handleNext() {
@@ -137,7 +158,7 @@ export default function QuizPage() {
 
         {/* Next / Finish button — appears after answering */}
         {answered && (
-          <div className="mt-10 w-full max-w-2xl">
+          <div className="mt-10 w-full max-w-2xl flex flex-col gap-3">
             <button
               onClick={handleNext}
               disabled={finishing}
@@ -152,6 +173,40 @@ export default function QuizPage() {
               }}
             >
               {finishing ? 'Saving results…' : isLast ? 'Finish & See Results →' : 'Next Question →'}
+            </button>
+            {isAdmin && (
+              <button
+                onClick={handleSkip}
+                disabled={finishing}
+                className="w-full py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-95"
+                style={{
+                  background: 'transparent',
+                  color: 'rgba(251,146,60,0.7)',
+                  border: '1px dashed rgba(251,146,60,0.35)',
+                  fontFamily: 'var(--font-space)',
+                  cursor: finishing ? 'not-allowed' : 'pointer',
+                }}
+              >
+                ⚡ Skip to Results →
+              </button>
+            )}
+          </div>
+        )}
+        {isAdmin && !answered && (
+          <div className="mt-10 w-full max-w-2xl">
+            <button
+              onClick={handleSkip}
+              disabled={finishing}
+              className="w-full py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-95"
+              style={{
+                background: 'transparent',
+                color: 'rgba(251,146,60,0.7)',
+                border: '1px dashed rgba(251,146,60,0.35)',
+                fontFamily: 'var(--font-space)',
+                cursor: finishing ? 'not-allowed' : 'pointer',
+              }}
+            >
+              ⚡ Skip to Results →
             </button>
           </div>
         )}

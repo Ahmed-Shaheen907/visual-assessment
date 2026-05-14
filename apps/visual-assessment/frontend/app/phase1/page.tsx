@@ -87,6 +87,8 @@ export default function Phase1Page() {
     .map((z, i) => ({ id: `ans-${i}`, label: z.label }))
     .find((a) => a.id === activeId);
 
+  const isAdmin = typeof window !== 'undefined' && localStorage.getItem('va_user_email') === 'admin@gmail.com';
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   function handleDragStart(event: DragStartEvent) {
@@ -178,6 +180,55 @@ export default function Phase1Page() {
     setActivePinQuizId(null);
     setActivePinTarget(null);
   }, [activePinQuiz, activePinQuizId]);
+
+  const handleSkip = useCallback(async () => {
+    if (saving) return;
+    setSaving(true);
+    const sessionId = localStorage.getItem('va_session_id');
+    if (sessionId) {
+      // Save any incomplete section quizzes as all wrong
+      for (const quizPinId of sectionQuizPinIds) {
+        if (!completedQuizPinIds.has(quizPinId)) {
+          const quiz = PIN_QUIZZES.find((q) => q.landmarkId === quizPinId);
+          if (quiz) {
+            await saveAnswers(sessionId, quiz.questions.map((q) => ({
+              phase: `phase1_pin_${quizPinId}`,
+              question_id: q.id,
+              answer_given: null,
+              correct: false,
+            })));
+          }
+        }
+      }
+      // Save section landmark answers — placed ones keep their answer, unplaced = null/wrong
+      if (dropZones.length > 0) {
+        await saveAnswers(sessionId, dropZones.map((z) => ({
+          phase: `phase1_${section.id}`,
+          question_id: z.id,
+          answer_given: z.accepted,
+          correct: z.accepted === z.label,
+        })));
+      }
+    }
+    setSaving(false);
+    if (sectionIndex < SECTIONS.length - 1) {
+      const nextIdx = sectionIndex + 1;
+      setTransitioning(true);
+      setActiveBoundsIndex(nextIdx);
+      setTimeout(() => {
+        setSectionIndex(nextIdx);
+        setDropZones(buildZones(nextIdx));
+        setSubmitted(false);
+        setTransitioning(false);
+        setStarBlinking(false);
+        setShowQuizPrompt(false);
+        setSelectedLabelId(null);
+        setCompletedQuizPinIds(new Set());
+      }, 1800);
+    } else {
+      router.push('/quiz');
+    }
+  }, [saving, sectionQuizPinIds, completedQuizPinIds, dropZones, section.id, sectionIndex, router]);
 
   const handleContinue = useCallback(async () => {
     setSaving(true);
@@ -509,6 +560,22 @@ export default function Phase1Page() {
                 >
                   {allPlaced ? '✓ Submit' : `${placedLabels.length}/${dropZones.length} Placed`}
                 </button>
+                {isAdmin && (
+                  <button
+                    onClick={handleSkip}
+                    disabled={saving || transitioning}
+                    className="w-full py-2 rounded-lg text-xs font-bold transition-all duration-150 active:scale-95"
+                    style={{
+                      fontFamily: 'var(--font-space)',
+                      background: 'transparent',
+                      color: 'rgba(251,146,60,0.7)',
+                      border: '1px dashed rgba(251,146,60,0.35)',
+                      cursor: saving || transitioning ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    ⚡ Skip Section →
+                  </button>
+                )}
                 {showQuizPrompt && !allSectionQuizDone && (
                   <div
                     style={{

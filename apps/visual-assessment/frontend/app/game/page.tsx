@@ -39,6 +39,7 @@ export default function GamePage() {
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
+  const isAdmin = typeof window !== 'undefined' && localStorage.getItem('va_user_email') === 'admin@gmail.com';
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -97,6 +98,20 @@ export default function GamePage() {
   function handleDeselectLabel() {
     setSelectedLabelId(null);
   }
+
+  const handleSkip = useCallback(async () => {
+    setSaving(true);
+    const sessionId = localStorage.getItem('va_session_id');
+    if (sessionId) {
+      await saveAnswers(sessionId, INITIAL_DROP_ZONES.map((z) => ({
+        phase: 'phase0',
+        question_id: z.id,
+        answer_given: null,
+        correct: false,
+      })));
+    }
+    router.push('/phase1');
+  }, [router]);
 
   const handleContinue = useCallback(async () => {
     setSaving(true);
@@ -283,6 +298,22 @@ export default function GamePage() {
                 >
                   {allPlaced ? '✓ Submit' : `${placedCount}/${TOTAL} Placed`}
                 </button>
+                {isAdmin && (
+                  <button
+                    onClick={handleSkip}
+                    disabled={saving}
+                    className="w-full py-2 rounded-lg text-xs font-bold transition-all duration-150 active:scale-95"
+                    style={{
+                      fontFamily: 'var(--font-space)',
+                      background: 'transparent',
+                      color: 'rgba(251,146,60,0.7)',
+                      border: '1px dashed rgba(251,146,60,0.35)',
+                      cursor: saving ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    ⚡ Skip Phase →
+                  </button>
+                )}
               </>
             )}
           </aside>

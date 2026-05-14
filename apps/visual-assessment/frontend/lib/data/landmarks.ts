@@ -76,10 +76,10 @@ export const SECTIONS: Section[] = [
   {
     id: 'sidi_abdel_rahman',
     label: 'Sidi Abdel Rahman',
-    center: [30.9662, 28.7536],
-    bounds: [[30.925, 28.695], [30.996, 28.816]],
+    center: [30.9806, 28.7103],
+    bounds: [[30.925, 28.585], [31.035, 28.816]],
     polygonCoords: [
-      [30.996, 28.695], [30.996, 28.816], [30.925, 28.816], [30.925, 28.695],
+      [31.035, 28.585], [31.035, 28.816], [30.925, 28.816], [30.925, 28.585],
     ],
     improvementTip: 'Revisit Sidi Abdel Rahman\'s hallmarks — its crystal-clear bay, luxury resort density, and proximity to Alamein.',
     landmarks: [
@@ -88,6 +88,9 @@ export const SECTIONS: Section[] = [
       { id: 'sar-3', label: 'ZAHRA North Coast',lat: 30.9524885, lng: 28.805802  },
       { id: 'sar-4', label: 'Marassi',          lat: 30.9709015, lng: 28.7506652 },
       { id: 'sar-5', label: 'Shamasy',          lat: 30.985583,  lng: 28.717028  },
+      { id: 'sar-6', label: 'ZOYA Ghazala Bay', lat: 31.0248219, lng: 28.5953851 },
+      { id: 'sar-7', label: 'Telal El Alamein', lat: 31.0081696, lng: 28.608729  },
+      { id: 'sar-8', label: 'Amwaj Chalet',     lat: 30.9993948, lng: 28.6840799 },
     ],
   },
   {

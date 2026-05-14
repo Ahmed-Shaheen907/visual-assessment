@@ -71,6 +71,17 @@ function MapLocker({ locked }: { locked: boolean }) {
   return null;
 }
 
+// ─── MapClickHandler ──────────────────────────────────────────────────────────
+
+function MapClickHandler({ onMapClick }: { onMapClick: () => void }) {
+  const map = useMap();
+  useEffect(() => {
+    map.on('click', onMapClick);
+    return () => { map.off('click', onMapClick); };
+  }, [map, onMapClick]);
+  return null;
+}
+
 // ─── MapTracker ───────────────────────────────────────────────────────────────
 
 function MapTracker({
@@ -315,15 +326,10 @@ export default function ZoomedMap({
           />
           <MapLocker locked={quizPhase !== 'idle'} />
           <MapTracker dropZones={dropZones} onPositionsUpdate={handlePositions} />
+          {selectedLabelId && onDeselectLabel && (
+            <MapClickHandler onMapClick={onDeselectLabel} />
+          )}
         </MapContainer>
-
-        {/* Click-capture: absorbs blank-map clicks to deselect a selected label */}
-        {selectedLabelId && (
-          <div
-            style={{ position: 'absolute', inset: 0, zIndex: 1000, cursor: 'crosshair' }}
-            onClick={onDeselectLabel}
-          />
-        )}
 
         {/* Pin overlay — sits above the Leaflet canvas */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>

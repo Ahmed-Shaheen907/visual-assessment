@@ -12,8 +12,8 @@ import {
   useSensor,
   useSensors,
   PointerSensor,
-  pointerWithin,
 } from '@dnd-kit/core';
+import { cursorCollision } from '@/lib/utils/collision';
 import DraggableAnswer from '@/components/DraggableAnswer';
 import PinQuizPanel from '@/components/PinQuizPanel';
 import type { DropZone } from '@/components/Map';
@@ -220,7 +220,7 @@ export default function Phase1Page() {
   const SIDEBAR_QUIZ_WIDTH = '60%';
 
   return (
-    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={cursorCollision} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="min-h-screen flex flex-col" style={{ background: 'var(--tgl-black)' }}>
 
         {/* Header */}

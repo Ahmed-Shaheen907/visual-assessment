@@ -236,6 +236,8 @@ export default function Map({ center, zoom, dropZones, submitted, onRemove }: Ma
       <MapContainer
         center={center}
         zoom={zoom}
+        minZoom={4}
+        maxZoom={17}
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
         zoomControl={true}

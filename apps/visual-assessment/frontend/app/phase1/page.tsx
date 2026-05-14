@@ -14,8 +14,10 @@ import {
   PointerSensor,
 } from '@dnd-kit/core';
 import DraggableAnswer from '@/components/DraggableAnswer';
+import PinQuizPanel from '@/components/PinQuizPanel';
 import type { DropZone } from '@/components/Map';
 import { SECTIONS } from '@/lib/data/landmarks';
+import { PIN_QUIZZES } from '@/lib/data/pin-quizzes';
 import { saveAnswers } from '@/lib/supabase-helpers';
 
 const ZoomedMap = dynamic(() => import('@/components/ZoomedMap'), { ssr: false });
@@ -39,6 +41,9 @@ export default function Phase1Page() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [activePinQuizId, setActivePinQuizId] = useState<string | null>(null);
+  const [quizSubmitting, setQuizSubmitting] = useState(false);
+  const [activeCompoundBounds, setActiveCompoundBounds] = useState<[[number, number], [number, number]] | null>(null);
 
   // On mount: fly to first section, then reveal content
   useEffect(() => {
@@ -48,6 +53,9 @@ export default function Phase1Page() {
     }, 1800);
     return () => clearTimeout(timer);
   }, []);
+
+  const quizPinIds = new Set(PIN_QUIZZES.map((q) => q.landmarkId));
+  const activePinQuiz = PIN_QUIZZES.find((q) => q.landmarkId === activePinQuizId) ?? null;
 
   const section = SECTIONS[sectionIndex];
   const activeBounds = SECTIONS[activeBoundsIndex].bounds;
@@ -87,6 +95,30 @@ export default function Phase1Page() {
     if (submitted) return;
     setDropZones((prev) => prev.map((z) => z.id === zoneId ? { ...z, accepted: null } : z));
   }
+
+  function handlePinClick(zoneId: string) {
+    if (submitted || transitioning || activePinQuizId) return;
+    const quiz = PIN_QUIZZES.find((q) => q.landmarkId === zoneId);
+    if (!quiz) return;
+    setActivePinQuizId(zoneId);
+    setActiveCompoundBounds(quiz.focusBounds);
+  }
+
+  const handleQuizSubmit = useCallback(async (answers: Record<string, string>) => {
+    setQuizSubmitting(true);
+    const sessionId = localStorage.getItem('va_session_id');
+    if (sessionId && activePinQuiz) {
+      await saveAnswers(sessionId, activePinQuiz.questions.map((q) => ({
+        phase: `phase1_pin_${activePinQuizId}`,
+        question_id: q.id,
+        answer_given: answers[q.id] ?? null,
+        correct: false,
+      })));
+    }
+    setQuizSubmitting(false);
+    setActivePinQuizId(null);
+    setActiveCompoundBounds(null);
+  }, [activePinQuiz, activePinQuizId]);
 
   const handleContinue = useCallback(async () => {
     setSaving(true);
@@ -193,10 +225,14 @@ export default function Phase1Page() {
             }}
           >
             <ZoomedMap
-              bounds={activeBounds}
+              bounds={activeCompoundBounds ?? activeBounds}
               dropZones={dropZones}
               submitted={submitted}
               onRemove={handleRemove}
+              onPinClick={handlePinClick}
+              quizPinIds={quizPinIds}
+              overlayImage={activePinQuiz?.masterPlanImage}
+              overlayBounds={activePinQuiz?.overlayBounds}
             />
 
             {/* Transition overlay */}
@@ -230,14 +266,22 @@ export default function Phase1Page() {
 
           {/* Sidebar */}
           <aside className="w-52 flex flex-col gap-2 shrink-0">
-            <p
-              className="text-xs font-bold uppercase tracking-widest mb-1"
-              style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)' }}
-            >
-              Landmarks
-            </p>
+            {!activePinQuiz && (
+              <p
+                className="text-xs font-bold uppercase tracking-widest mb-1"
+                style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)' }}
+              >
+                Landmarks
+              </p>
+            )}
 
-            {dropZones.length === 0 ? (
+            {activePinQuiz ? (
+              <PinQuizPanel
+                quiz={activePinQuiz}
+                onSubmit={handleQuizSubmit}
+                submitting={quizSubmitting}
+              />
+            ) : dropZones.length === 0 ? (
               /* No landmarks configured yet */
               <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">
                 <div style={{ fontSize: 28 }}>📍</div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, ImageOverlay, useMap } from 'react-leaflet';
 import { useDroppable } from '@dnd-kit/core';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -67,13 +67,17 @@ function DroppablePin({
   index,
   pos,
   submitted,
+  hasQuiz,
   onRemove,
+  onPinClick,
 }: {
   zone: DropZone;
   index: number;
   pos: { x: number; y: number } | undefined;
   submitted: boolean;
+  hasQuiz: boolean;
   onRemove?: (zoneId: string) => void;
+  onPinClick?: (zoneId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: zone.id });
   const baseColor = LANDMARK_COLORS[index % LANDMARK_COLORS.length];
@@ -84,6 +88,8 @@ function DroppablePin({
   const pinColor = isCorrect ? '#D7FF00' : isWrong ? '#ef4444' : baseColor;
 
   if (!pos) return null;
+
+  const canClick = hasQuiz && !submitted && !answered;
 
   return (
     <div
@@ -97,9 +103,30 @@ function DroppablePin({
         pointerEvents: 'all',
       }}
     >
+      {/* Outer glow ring */}
       <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', background: `radial-gradient(circle, ${pinColor}33 0%, transparent 70%)`, opacity: isOver ? 1 : answered ? 0.3 : 0.7, transition: 'opacity 0.2s', pointerEvents: 'none', animation: answered || submitted ? 'none' : 'pin-pulse-ring 2.5s ease-in-out infinite' }} />
+      {/* Border ring */}
       <div style={{ position: 'absolute', width: 62, height: 62, borderRadius: '50%', left: '50%', top: '50%', transform: isOver ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%)', border: `2px solid ${pinColor}`, opacity: isOver ? 1 : answered ? 0.5 : 0.65, boxShadow: isOver ? `0 0 16px ${pinColor}88` : answered ? `0 0 10px ${pinColor}44` : 'none', transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s', pointerEvents: 'none' }} />
-      <div style={{ width: 36, height: 36, borderRadius: '50%', background: answered ? pinColor : baseColor, border: '2.5px solid rgba(0,0,0,0.5)', boxShadow: `0 2px 12px ${pinColor}88, 0 0 0 1px ${pinColor}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', transition: 'background 0.25s, transform 0.15s', transform: isOver ? 'scale(1.15)' : 'scale(1)', animation: answered || submitted ? 'none' : 'pin-pulse 2.5s ease-in-out infinite' }}>
+      {/* Center circle */}
+      <div
+        onClick={canClick ? () => onPinClick?.(zone.id) : undefined}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          background: answered ? pinColor : baseColor,
+          border: '2.5px solid rgba(0,0,0,0.5)',
+          boxShadow: `0 2px 12px ${pinColor}88, 0 0 0 1px ${pinColor}44`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          transition: 'background 0.25s, transform 0.15s',
+          transform: isOver ? 'scale(1.15)' : 'scale(1)',
+          animation: answered || submitted ? 'none' : 'pin-pulse 2.5s ease-in-out infinite',
+          cursor: canClick ? 'pointer' : 'default',
+        }}
+      >
         {submitted ? (
           <span style={{ color: isCorrect ? '#000' : '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'var(--font-space)' }}>{isCorrect ? '✓' : '✗'}</span>
         ) : answered ? (
@@ -108,6 +135,33 @@ function DroppablePin({
           <span style={{ color: '#fff', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space)' }}>{index + 1}</span>
         )}
       </div>
+
+      {/* Quiz indicator badge */}
+      {canClick && (
+        <div
+          style={{
+            position: 'absolute',
+            top: -6,
+            right: -6,
+            width: 16,
+            height: 16,
+            borderRadius: '50%',
+            background: 'var(--tgl-lime)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 9,
+            fontWeight: 900,
+            color: '#000',
+            boxShadow: '0 0 8px rgba(215,255,0,0.6)',
+            pointerEvents: 'none',
+            fontFamily: 'var(--font-space)',
+          }}
+        >
+          ✦
+        </div>
+      )}
+
       {answered && (
         <div
           onClick={!submitted && onRemove ? () => onRemove(zone.id) : undefined}
@@ -126,9 +180,22 @@ interface ZoomedMapProps {
   dropZones: DropZone[];
   submitted: boolean;
   onRemove?: (zoneId: string) => void;
+  onPinClick?: (zoneId: string) => void;
+  quizPinIds?: Set<string>;
+  overlayImage?: string;
+  overlayBounds?: [[number, number], [number, number]];
 }
 
-export default function ZoomedMap({ bounds, dropZones, submitted, onRemove }: ZoomedMapProps) {
+export default function ZoomedMap({
+  bounds,
+  dropZones,
+  submitted,
+  onRemove,
+  onPinClick,
+  quizPinIds,
+  overlayImage,
+  overlayBounds,
+}: ZoomedMapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const handlePositions = useCallback((pos: Record<string, { x: number; y: number }>) => setPositions(pos), []);
 
@@ -137,6 +204,8 @@ export default function ZoomedMap({ bounds, dropZones, submitted, onRemove }: Zo
       <MapContainer
         center={[31.05, 28.2]}
         zoom={9}
+        minZoom={4}
+        maxZoom={17}
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
         zoomControl={true}
@@ -147,12 +216,28 @@ export default function ZoomedMap({ bounds, dropZones, submitted, onRemove }: Zo
           maxZoom={19}
           maxNativeZoom={19}
         />
+        {overlayImage && overlayBounds && (
+          <ImageOverlay
+            url={overlayImage}
+            bounds={overlayBounds as L.LatLngBoundsExpression}
+            opacity={0.6}
+          />
+        )}
         <FlyController bounds={bounds} />
         <MapTracker dropZones={dropZones} onPositionsUpdate={handlePositions} />
       </MapContainer>
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {dropZones.map((zone, i) => (
-          <DroppablePin key={zone.id} zone={zone} index={i} pos={positions[zone.id]} submitted={submitted} onRemove={onRemove} />
+          <DroppablePin
+            key={zone.id}
+            zone={zone}
+            index={i}
+            pos={positions[zone.id]}
+            submitted={submitted}
+            hasQuiz={quizPinIds?.has(zone.id) ?? false}
+            onRemove={onRemove}
+            onPinClick={onPinClick}
+          />
         ))}
       </div>
     </div>

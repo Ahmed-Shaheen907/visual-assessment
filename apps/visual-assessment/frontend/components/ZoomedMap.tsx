@@ -111,8 +111,10 @@ function DroppablePin({
   hiddenPinId,
   completedQuizPinIds,
   blinkingPinId,
+  selectedLabelId,
   onRemove,
   onPinClick,
+  onLabelPlace,
 }: {
   zone: DropZone;
   index: number;
@@ -122,8 +124,10 @@ function DroppablePin({
   hiddenPinId?: string | null;
   completedQuizPinIds: Set<string>;
   blinkingPinId?: string | null;
+  selectedLabelId?: string | null;
   onRemove?: (zoneId: string) => void;
   onPinClick?: (zoneId: string) => void;
+  onLabelPlace?: (zoneId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: zone.id });
   const baseColor = LANDMARK_COLORS[index % LANDMARK_COLORS.length];
@@ -135,25 +139,38 @@ function DroppablePin({
   const quizDone = completedQuizPinIds.has(zone.id);
   const canClick = hasQuiz && !submitted && !quizDone;
   const isBlinking = blinkingPinId === zone.id && canClick;
+  const placementMode = !!selectedLabelId && !submitted;
 
   if (!pos || zone.id === hiddenPinId) return null;
 
   return (
     <div
       ref={setNodeRef}
-      onClick={canClick ? () => onPinClick?.(zone.id) : undefined}
+      onClick={(e) => {
+        if (placementMode) {
+          e.stopPropagation();
+          onLabelPlace?.(zone.id);
+        } else if (canClick) {
+          onPinClick?.(zone.id);
+        }
+      }}
       style={{
         position: 'absolute',
         left: pos.x,
         top: pos.y,
+        width: 80,
+        height: 80,
         transform: 'translate(-50%, -50%)',
-        zIndex: 1000,
+        zIndex: 1001,
         pointerEvents: 'all',
-        cursor: canClick ? 'pointer' : 'default',
+        cursor: placementMode ? 'crosshair' : canClick ? 'pointer' : 'default',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       {/* Outer glow ring */}
-      <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', background: `radial-gradient(circle, ${pinColor}33 0%, transparent 70%)`, opacity: isOver ? 1 : answered ? 0.3 : 0.7, transition: 'opacity 0.2s', pointerEvents: 'none', animation: answered || submitted ? 'none' : 'pin-pulse-ring 2.5s ease-in-out infinite' }} />
+      <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', background: `radial-gradient(circle, ${pinColor}33 0%, transparent 70%)`, opacity: isOver || placementMode ? 1 : answered ? 0.3 : 0.7, transition: 'opacity 0.2s', pointerEvents: 'none', animation: answered || submitted ? 'none' : 'pin-pulse-ring 2.5s ease-in-out infinite' }} />
       {/* Border ring */}
       <div style={{ position: 'absolute', width: 62, height: 62, borderRadius: '50%', left: '50%', top: '50%', transform: isOver ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%)', border: `2px solid ${pinColor}`, opacity: isOver ? 1 : answered ? 0.5 : 0.65, boxShadow: isOver ? `0 0 16px ${pinColor}88` : answered ? `0 0 10px ${pinColor}44` : 'none', transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s', pointerEvents: 'none' }} />
       {/* Center circle */}
@@ -189,8 +206,8 @@ function DroppablePin({
           onClick={(e) => { e.stopPropagation(); onPinClick?.(zone.id); }}
           style={{
             position: 'absolute',
-            top: -10,
-            right: -10,
+            top: 12,
+            right: 12,
             width: 22,
             height: 22,
             borderRadius: '50%',
@@ -215,7 +232,7 @@ function DroppablePin({
       {answered && (
         <div
           onClick={!submitted && onRemove ? (e) => { e.stopPropagation(); onRemove(zone.id); } : undefined}
-          style={{ position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: submitted ? (isCorrect ? '#D7FF00' : '#ef4444') : 'rgba(8, 10, 20, 0.88)', color: submitted ? (isCorrect ? '#000' : '#fff') : '#fff', fontSize: 9, fontWeight: 700, padding: submitted ? '2px 8px' : '2px 6px 2px 8px', borderRadius: 4, whiteSpace: 'nowrap', boxShadow: submitted ? (isCorrect ? '0 0 10px rgba(215,255,0,0.5)' : '0 0 10px rgba(239,68,68,0.5)') : '0 2px 10px rgba(0,0,0,0.5)', border: submitted ? 'none' : '1px solid rgba(215,255,0,0.3)', pointerEvents: submitted ? 'none' : 'all', cursor: submitted ? 'default' : 'pointer', fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)', letterSpacing: '0.02em', transition: 'background 0.3s, color 0.3s', display: 'flex', alignItems: 'center', gap: 4 }}
+          style={{ position: 'absolute', top: 64, left: '50%', transform: 'translateX(-50%)', background: submitted ? (isCorrect ? '#D7FF00' : '#ef4444') : 'rgba(8, 10, 20, 0.88)', color: submitted ? (isCorrect ? '#000' : '#fff') : '#fff', fontSize: 9, fontWeight: 700, padding: submitted ? '2px 8px' : '2px 6px 2px 8px', borderRadius: 4, whiteSpace: 'nowrap', boxShadow: submitted ? (isCorrect ? '0 0 10px rgba(215,255,0,0.5)' : '0 0 10px rgba(239,68,68,0.5)') : '0 2px 10px rgba(0,0,0,0.5)', border: submitted ? 'none' : '1px solid rgba(215,255,0,0.3)', pointerEvents: submitted ? 'none' : 'all', cursor: submitted ? 'default' : 'pointer', fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)', letterSpacing: '0.02em', transition: 'background 0.3s, color 0.3s', display: 'flex', alignItems: 'center', gap: 4 }}
         >
           {submitted && isWrong ? zone.label : zone.accepted}
           {!submitted && <span style={{ fontSize: 10, lineHeight: 1, opacity: 0.6, fontWeight: 900, marginTop: -1 }}>×</span>}
@@ -239,6 +256,9 @@ interface ZoomedMapProps {
   hiddenPinId?: string | null;
   completedQuizPinIds?: Set<string>;
   blinkingPinId?: string | null;
+  selectedLabelId?: string | null;
+  onLabelPlace?: (zoneId: string) => void;
+  onDeselectLabel?: () => void;
 }
 
 export default function ZoomedMap({
@@ -253,6 +273,9 @@ export default function ZoomedMap({
   hiddenPinId,
   completedQuizPinIds = new Set(),
   blinkingPinId,
+  selectedLabelId,
+  onLabelPlace,
+  onDeselectLabel,
 }: ZoomedMapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const handlePositions = useCallback((pos: Record<string, { x: number; y: number }>) => setPositions(pos), []);
@@ -294,6 +317,14 @@ export default function ZoomedMap({
           <MapTracker dropZones={dropZones} onPositionsUpdate={handlePositions} />
         </MapContainer>
 
+        {/* Click-capture: absorbs blank-map clicks to deselect a selected label */}
+        {selectedLabelId && (
+          <div
+            style={{ position: 'absolute', inset: 0, zIndex: 1000, cursor: 'crosshair' }}
+            onClick={onDeselectLabel}
+          />
+        )}
+
         {/* Pin overlay — sits above the Leaflet canvas */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
           {dropZones.map((zone, i) => (
@@ -307,8 +338,10 @@ export default function ZoomedMap({
               hiddenPinId={hiddenPinId}
               completedQuizPinIds={completedQuizPinIds}
               blinkingPinId={blinkingPinId}
+              selectedLabelId={selectedLabelId}
               onRemove={onRemove}
               onPinClick={onPinClick}
+              onLabelPlace={onLabelPlace}
             />
           ))}
         </div>

@@ -12,6 +12,7 @@ import {
   useSensor,
   useSensors,
   PointerSensor,
+  pointerWithin,
 } from '@dnd-kit/core';
 import DraggableAnswer from '@/components/DraggableAnswer';
 import PinQuizPanel from '@/components/PinQuizPanel';
@@ -42,6 +43,9 @@ export default function Phase1Page() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Click-to-place state
+  const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
 
   // Quiz mode state machine
   const [quizPhase, setQuizPhase] = useState<QuizPhase>('idle');
@@ -108,6 +112,24 @@ export default function Phase1Page() {
     setDropZones((prev) => prev.map((z) => z.id === zoneId ? { ...z, accepted: null } : z));
   }
 
+  function handleLabelSelect(labelId: string) {
+    if (submitted || transitioning || quizPhase !== 'idle') return;
+    setSelectedLabelId((prev) => prev === labelId ? null : labelId);
+  }
+
+  function handleLabelPlace(zoneId: string) {
+    if (!selectedLabelId || submitted) return;
+    const idx = parseInt(selectedLabelId.replace('ans-', ''), 10);
+    const labelText = dropZones[idx]?.label;
+    if (!labelText) return;
+    setDropZones((prev) => prev.map((z) => z.id === zoneId ? { ...z, accepted: labelText } : z));
+    setSelectedLabelId(null);
+  }
+
+  function handleDeselectLabel() {
+    setSelectedLabelId(null);
+  }
+
   function handlePinClick(zoneId: string) {
     if (submitted || transitioning || quizPhase !== 'idle') return;
     const quiz = PIN_QUIZZES.find((q) => q.landmarkId === zoneId);
@@ -115,6 +137,7 @@ export default function Phase1Page() {
 
     setStarBlinking(false);
     setShowQuizPrompt(false);
+    setSelectedLabelId(null);
     setActivePinQuizId(zoneId);       // pin disappears immediately (hiddenPinId)
     setActivePinTarget(quiz.focusPoint);
     setQuizPhase('zooming');
@@ -133,12 +156,18 @@ export default function Phase1Page() {
     setQuizSubmitting(true);
     const sessionId = localStorage.getItem('va_session_id');
     if (sessionId && activePinQuiz) {
-      await saveAnswers(sessionId, activePinQuiz.questions.map((q) => ({
-        phase: `phase1_pin_${activePinQuizId}`,
-        question_id: q.id,
-        answer_given: ans[q.id] ?? null,
-        correct: false,
-      })));
+      await saveAnswers(sessionId, activePinQuiz.questions.map((q) => {
+        const given = ans[q.id] ?? null;
+        let correct = false;
+        if (q.type === 'mcq' || q.type === 'truefalse') {
+          correct = given !== null && given.toLowerCase() === String(q.answer).toLowerCase();
+        } else if (q.type === 'multiselect') {
+          const givenArr: string[] = given ? JSON.parse(given) : [];
+          const correctArr = Array.isArray(q.answer) ? (q.answer as string[]) : [];
+          correct = givenArr.length === correctArr.length && givenArr.every((a) => correctArr.includes(a));
+        }
+        return { phase: `phase1_pin_${activePinQuizId}`, question_id: q.id, answer_given: given, correct };
+      }));
     }
     setQuizSubmitting(false);
     setCompletedQuizPinIds((prev) => new Set([...prev, activePinQuizId!]));
@@ -174,6 +203,7 @@ export default function Phase1Page() {
         setTransitioning(false);
         setStarBlinking(false);
         setShowQuizPrompt(false);
+        setSelectedLabelId(null);
       }, 1800);
     } else {
       router.push('/quiz');
@@ -190,7 +220,7 @@ export default function Phase1Page() {
   const SIDEBAR_QUIZ_WIDTH = '60%';
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="min-h-screen flex flex-col" style={{ background: 'var(--tgl-black)' }}>
 
         {/* Header */}
@@ -283,6 +313,9 @@ export default function Phase1Page() {
               hiddenPinId={activePinQuizId}
               completedQuizPinIds={completedQuizPinIds}
               blinkingPinId={starBlinking ? (sectionQuizPinIds.find((id) => !completedQuizPinIds.has(id)) ?? null) : null}
+              selectedLabelId={selectedLabelId}
+              onLabelPlace={handleLabelPlace}
+              onDeselectLabel={handleDeselectLabel}
             />
 
             {/* Masterplan PNG — mounts during 'transitioning' so opacity transition fires correctly */}
@@ -449,6 +482,8 @@ export default function Phase1Page() {
                       id={`ans-${i}`}
                       label={zone.label}
                       isPlaced={placedLabels.includes(zone.label)}
+                      isSelected={selectedLabelId === `ans-${i}`}
+                      onSelect={handleLabelSelect}
                     />
                   ))}
                 </div>

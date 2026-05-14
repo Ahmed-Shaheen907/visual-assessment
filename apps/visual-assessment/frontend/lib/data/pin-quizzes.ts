@@ -10,7 +10,7 @@ export interface PinQuizData {
 export const PIN_QUIZZES: PinQuizData[] = [
   {
     landmarkId: 'sh-4',
-    masterPlanImage: '/marsa-baghoush.png',
+    masterPlanImage: '/Final marsa-baghoush.png',
     focusPoint: { lat: 31.1774707, lng: 27.656592, zoom: 17 },
     questions: [
       {

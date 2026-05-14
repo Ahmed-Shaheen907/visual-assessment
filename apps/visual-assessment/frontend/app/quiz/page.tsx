@@ -38,7 +38,7 @@ export default function QuizPage() {
             phase: 'phase2',
             question_id: q.id,
             answer_given: answers[i],
-            correct: q.type === 'freetext' ? true : answers[i]?.toLowerCase() === q.answer.toLowerCase(),
+            correct: q.type === 'freetext' ? true : answers[i]?.toLowerCase() === (q.answer as string).toLowerCase(),
           }))
         );
         await markSessionComplete(sessionId);

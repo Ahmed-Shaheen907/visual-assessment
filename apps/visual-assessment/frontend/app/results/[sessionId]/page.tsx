@@ -114,7 +114,7 @@ function buildAnswerReview(answers: Answer[]): PhaseGroup[] {
           questionLabel: q?.question ?? a.question_id,
           given: a.answer_given,
           correct: a.correct,
-          correctAnswer: q?.answer ?? '',
+          correctAnswer: Array.isArray(q?.answer) ? (q.answer as string[]).join(', ') : (q?.answer ?? ''),
         };
       }),
     });

@@ -9,6 +9,10 @@ interface PinQuizPanelProps {
   submitting: boolean;
 }
 
+function parseJson<T>(raw: string, fallback: T): T {
+  try { return JSON.parse(raw) as T; } catch { return fallback; }
+}
+
 export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPanelProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -22,18 +26,51 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
   const isLast = currentIndex === quiz.questions.length - 1;
   const currentAnswer = answers[q?.id ?? ''] ?? '';
 
+  // ── answer helpers ──────────────────────────────────────────────────────────
+
+  function setAnswer(id: string, value: string) {
+    setAnswers((prev) => ({ ...prev, [id]: value }));
+  }
+
+  function toggleMultiselect(id: string, opt: string) {
+    const current = parseJson<string[]>(answers[id] ?? '[]', []);
+    const next = current.includes(opt)
+      ? current.filter((v) => v !== opt)
+      : [...current, opt];
+    setAnswer(id, JSON.stringify(next));
+  }
+
+  function setPricegroupItem(id: string, label: string, value: string) {
+    const current = parseJson<Record<string, string>>(answers[id] ?? '{}', {});
+    setAnswer(id, JSON.stringify({ ...current, [label]: value }));
+  }
+
+  function getPricegroupItem(id: string, label: string): string {
+    return parseJson<Record<string, string>>(answers[id] ?? '{}', {})[label] ?? '';
+  }
+
+  function isCurrentAnswered(): boolean {
+    if (!q) return false;
+    if (q.type === 'freetext') return currentAnswer.trim().length > 0;
+    if (q.type === 'mcq' || q.type === 'truefalse') return currentAnswer !== '';
+    if (q.type === 'multiselect') {
+      return parseJson<string[]>(currentAnswer || '[]', []).length > 0;
+    }
+    if (q.type === 'pricegroup') return true; // always continuable
+    return false;
+  }
+
+  // ── navigation ──────────────────────────────────────────────────────────────
+
   const advance = useCallback(() => {
     if (advancing) return;
     setAdvancing(true);
-    // Slide current card out to the left
     setCardStyle({ transform: 'translateX(-60px)', opacity: 0, transition: 'transform 0.25s ease, opacity 0.2s ease' });
     setTimeout(() => {
       setCurrentIndex((i) => i + 1);
-      // Place next card off-screen to the right (no transition)
       setCardStyle({ transform: 'translateX(40px)', opacity: 0, transition: 'none' });
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
-          // Slide in from the right with spring
           setCardStyle({
             transform: 'translateX(0)',
             opacity: 1,
@@ -45,15 +82,9 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
     }, 260);
   }, [advancing]);
 
-  function setAnswer(id: string, value: string) {
-    setAnswers((prev) => ({ ...prev, [id]: value }));
-  }
-
   function handleSelect(id: string, value: string) {
     setAnswer(id, value);
-    if (!isLast) {
-      setTimeout(advance, 350);
-    }
+    if (!isLast) setTimeout(advance, 350);
   }
 
   function handleContinue() {
@@ -74,6 +105,14 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
       : 'rgba(255,255,255,0.15)'
   );
 
+  const showContinueButton =
+    q.type === 'freetext' ||
+    q.type === 'multiselect' ||
+    q.type === 'pricegroup' ||
+    isLast;
+
+  const canContinue = isCurrentAnswered() && !submitting && !advancing;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, gap: 16 }}>
 
@@ -89,7 +128,7 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
             fontFamily: 'var(--font-space)',
           }}
         >
-          Compound Quiz
+          Project Quiz
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-space)' }}>
@@ -126,6 +165,7 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
               gap: 16,
               height: '100%',
               boxSizing: 'border-box',
+              overflowY: q.type === 'pricegroup' ? 'auto' : 'hidden',
             }}
           >
             <p
@@ -136,11 +176,13 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
                 color: 'var(--tgl-white)',
                 fontFamily: 'var(--font-space)',
                 margin: 0,
+                flexShrink: 0,
               }}
             >
               {q.question}
             </p>
 
+            {/* ── Freetext ── */}
             {q.type === 'freetext' && (
               <textarea
                 rows={4}
@@ -167,6 +209,7 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
               />
             )}
 
+            {/* ── True / False ── */}
             {q.type === 'truefalse' && (
               <div style={{ display: 'flex', gap: 10 }}>
                 {['true', 'false'].map((opt) => {
@@ -198,6 +241,7 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
               </div>
             )}
 
+            {/* ── MCQ ── */}
             {q.type === 'mcq' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {q.options?.map((opt) => {
@@ -228,14 +272,115 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
                 })}
               </div>
             )}
+
+            {/* ── Multiselect ── */}
+            {q.type === 'multiselect' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-space)', margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  Select all that apply
+                </p>
+                {q.options?.map((opt) => {
+                  const selected = parseJson<string[]>(currentAnswer || '[]', []).includes(opt);
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() => toggleMultiselect(q.id, opt)}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '11px 14px',
+                        borderRadius: 10,
+                        fontSize: 13,
+                        fontFamily: 'var(--font-montserrat)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        transition: 'background 0.15s, color 0.15s, transform 0.1s',
+                        transform: selected ? 'scale(1.01)' : 'scale(1)',
+                        background: selected ? 'rgba(215,255,0,0.14)' : 'rgba(255,255,255,0.04)',
+                        color: selected ? 'var(--tgl-lime)' : 'rgba(255,255,255,0.65)',
+                        border: selected ? '1px solid rgba(215,255,0,0.45)' : '1px solid rgba(255,255,255,0.08)',
+                        boxShadow: selected ? '0 0 10px rgba(215,255,0,0.15)' : 'none',
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: 4,
+                          border: selected ? 'none' : '1.5px solid rgba(255,255,255,0.2)',
+                          background: selected ? 'var(--tgl-lime)' : 'transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          fontSize: 10,
+                          color: '#000',
+                          fontWeight: 900,
+                          transition: 'background 0.15s, border 0.15s',
+                        }}
+                      >
+                        {selected ? '✓' : ''}
+                      </span>
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ── Price Group ── */}
+            {q.type === 'pricegroup' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {q.items?.map((label) => (
+                  <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: 'rgba(215,255,0,0.6)',
+                        fontFamily: 'var(--font-space)',
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {label}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 4.5M EGP"
+                      value={getPricegroupItem(q.id, label)}
+                      onChange={(e) => setPricegroupItem(q.id, label, e.target.value)}
+                      style={{
+                        width: '100%',
+                        borderRadius: 8,
+                        padding: '9px 12px',
+                        fontSize: 13,
+                        outline: 'none',
+                        background: 'rgba(255,255,255,0.06)',
+                        border: getPricegroupItem(q.id, label).trim()
+                          ? '1px solid rgba(215,255,0,0.4)'
+                          : '1px solid rgba(255,255,255,0.1)',
+                        color: 'var(--tgl-white)',
+                        fontFamily: 'var(--font-montserrat)',
+                        transition: 'border-color 0.15s',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
           </div>
         </div>
       </div>
 
-      {/* Continue / Submit — only for freetext or last question */}
-      {(q.type === 'freetext' || isLast) && (
+      {/* Continue / Submit button */}
+      {showContinueButton && (
         <button
-          disabled={!currentAnswer.trim() || submitting || advancing}
+          disabled={!canContinue}
           onClick={handleContinue}
           style={{
             flexShrink: 0,
@@ -245,20 +390,12 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
             fontSize: 13,
             fontWeight: 700,
             fontFamily: 'var(--font-space)',
-            cursor: currentAnswer.trim() && !submitting && !advancing ? 'pointer' : 'not-allowed',
+            cursor: canContinue ? 'pointer' : 'not-allowed',
             transition: 'background 0.2s, box-shadow 0.2s',
-            background: currentAnswer.trim() && !submitting && !advancing
-              ? 'var(--tgl-lime)'
-              : 'rgba(215,255,0,0.06)',
-            color: currentAnswer.trim() && !submitting && !advancing
-              ? '#000'
-              : 'rgba(215,255,0,0.3)',
-            border: currentAnswer.trim() && !submitting && !advancing
-              ? 'none'
-              : '1px solid rgba(215,255,0,0.15)',
-            boxShadow: currentAnswer.trim() && !submitting && !advancing
-              ? 'var(--glow-lime)'
-              : 'none',
+            background: canContinue ? 'var(--tgl-lime)' : 'rgba(215,255,0,0.06)',
+            color: canContinue ? '#000' : 'rgba(215,255,0,0.3)',
+            border: canContinue ? 'none' : '1px solid rgba(215,255,0,0.15)',
+            boxShadow: canContinue ? 'var(--glow-lime)' : 'none',
           }}
         >
           {submitting ? 'Saving…' : isLast ? '✓ Submit Quiz' : 'Continue →'}

@@ -1,13 +1,14 @@
-export type QuestionType = 'mcq' | 'truefalse' | 'freetext';
+export type QuestionType = 'mcq' | 'truefalse' | 'freetext' | 'multiselect' | 'pricegroup';
 
 export interface Question {
   id: string;
   type: QuestionType;
   section: string; // matches Section.id from landmarks.ts, or 'general'
   question: string;
-  options?: string[];       // mcq only
-  answer: string;           // correct answer (exact string match for mcq/tf, used as reference for freetext)
-  tip: string;              // shown on results if wrong
+  options?: string[];            // mcq and multiselect
+  answer: string | string[];     // string[] for multiselect correct answers
+  items?: string[];              // pricegroup: label for each price input
+  tip: string;
 }
 
 // TODO: Replace placeholder questions with real content from client

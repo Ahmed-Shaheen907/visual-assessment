@@ -240,6 +240,7 @@ export default function AdminPage() {
   const [agents, setAgents] = useState<AgentWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const loadAgents = useCallback(async (aId: string) => {
     setLoading(true);
@@ -278,6 +279,7 @@ export default function AdminPage() {
   }
 
   async function handleSignOut() {
+    setSigningOut(true);
     await supabase.auth.signOut();
     router.replace('/auth');
   }
@@ -300,17 +302,22 @@ export default function AdminPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowModal(true)}
-            className="px-4 py-2 rounded-xl text-sm font-bold"
+            className="px-4 py-2 rounded-xl text-sm font-bold transition-all duration-150"
             style={{ background: 'var(--tgl-lime)', color: '#000', fontFamily: 'var(--font-space)', boxShadow: '0 0 16px rgba(215,255,0,0.25)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 24px rgba(215,255,0,0.4)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 16px rgba(215,255,0,0.25)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
           >
             + Add Agent
           </button>
           <button
             onClick={handleSignOut}
-            className="px-3 py-2 rounded-xl text-xs font-bold"
-            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'var(--font-space)' }}
+            disabled={signingOut}
+            className="px-3 py-2 rounded-xl text-xs font-bold transition-colors duration-150"
+            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'var(--font-space)', cursor: signingOut ? 'not-allowed' : 'pointer' }}
+            onMouseEnter={e => { if (!signingOut) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
           >
-            Sign out
+            {signingOut ? 'Signing out…' : 'Sign out'}
           </button>
         </div>
       </header>
@@ -374,8 +381,10 @@ export default function AdminPage() {
             </p>
             <button
               onClick={() => setShowModal(true)}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold"
-              style={{ background: 'var(--tgl-lime)', color: '#000', fontFamily: 'var(--font-space)' }}
+              className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-150"
+              style={{ background: 'var(--tgl-lime)', color: '#000', fontFamily: 'var(--font-space)', boxShadow: '0 0 16px rgba(215,255,0,0.2)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 24px rgba(215,255,0,0.4)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 16px rgba(215,255,0,0.2)'; (e.currentTarget as HTMLElement).style.transform = 'none'; }}
             >
               + Add First Agent
             </button>

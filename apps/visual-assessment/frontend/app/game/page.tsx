@@ -39,6 +39,7 @@ export default function GamePage() {
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   const isAdmin = typeof window !== 'undefined' && localStorage.getItem('va_user_email') === 'admin@gmail.com';
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -211,8 +212,40 @@ export default function GamePage() {
               border: '1px solid rgba(215,255,0,0.15)',
               boxShadow: '0 0 40px rgba(215,255,0,0.05), inset 0 0 0 1px rgba(215,255,0,0.05)',
               minHeight: 460,
+              position: 'relative',
             }}
           >
+            {!mapReady && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 9999,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12,
+                  background: '#0d0d0d',
+                  borderRadius: 'inherit',
+                }}
+              >
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    border: '3px solid rgba(215,255,0,0.15)',
+                    borderTopColor: 'var(--tgl-lime)',
+                    animation: 'spin 0.8s linear infinite',
+                  }}
+                />
+                <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, fontFamily: 'var(--font-montserrat)' }}>
+                  Loading map…
+                </span>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              </div>
+            )}
             <Map
               center={[31.05, 28.2]}
               zoom={9}
@@ -222,6 +255,7 @@ export default function GamePage() {
               onRemove={handleRemove}
               onLabelPlace={handleLabelPlace}
               onDeselectLabel={handleDeselectLabel}
+              onReady={() => setMapReady(true)}
             />
           </div>
 

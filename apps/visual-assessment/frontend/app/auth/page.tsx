@@ -39,7 +39,7 @@ function Field({
         placeholder={placeholder}
         required
         autoComplete={type === 'password' ? 'current-password' : undefined}
-        className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all duration-200"
+        className="w-full px-4 py-2.5 rounded-xl text-sm font-medium outline-none transition-all duration-200"
         style={inputStyle}
         onFocus={(e) => {
           e.target.style.border = '1px solid rgba(215,255,0,0.5)';
@@ -144,41 +144,24 @@ export default function AuthPage() {
 
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
-        <div className="flex justify-center mb-4">
-          <Image src="/tgl-logo.png" alt="TGL" width={40} height={40} className="object-contain" />
+        <div className="flex justify-center mb-3">
+          <Image src="/tgl-logo.png" alt="TGL" width={32} height={32} className="object-contain" />
         </div>
 
         {/* Heading */}
-        <div className="text-center mb-5">
-          <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3"
-            style={{
-              border: '1px solid rgba(215,255,0,0.25)',
-              color: 'var(--tgl-lime)',
-              background: 'rgba(215,255,0,0.06)',
-              fontFamily: 'var(--font-space)',
-            }}
-          >
-            Sales Knowledge Assessment
-          </div>
+        <div className="text-center mb-4">
           <h1
-            className="text-3xl font-black tracking-tight leading-none mb-1"
+            className="text-2xl font-black tracking-tight leading-none mb-0.5"
             style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-white)', letterSpacing: '-0.03em' }}
           >
             North Coast
           </h1>
           <h2
-            className="text-3xl font-black tracking-tight leading-none mb-2"
+            className="text-2xl font-black tracking-tight leading-none mb-0"
             style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-lime)', letterSpacing: '-0.03em' }}
           >
             Assessment
           </h2>
-          <p
-            className="text-sm leading-relaxed"
-            style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-montserrat)', maxWidth: 320, margin: '0 auto' }}
-          >
-            Test your knowledge of the North Coast — locations, landmarks, and selling points.
-          </p>
         </div>
 
         {confirmSent ? (
@@ -212,7 +195,7 @@ export default function AuthPage() {
           <>
             {/* Tab switcher */}
             <div
-              className="flex rounded-xl mb-4 p-1"
+              className="flex rounded-xl mb-3 p-1"
               style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.08)' }}
             >
               {(['login', 'signup'] as const).map((t) => (
@@ -227,6 +210,8 @@ export default function AuthPage() {
                     border: tab === t ? '1px solid rgba(215,255,0,0.25)' : '1px solid transparent',
                     cursor: 'pointer',
                   }}
+                  onMouseEnter={e => { if (tab !== t) (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.6)'; }}
+                  onMouseLeave={e => { if (tab !== t) (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}
                 >
                   {t === 'login' ? 'Log In' : 'Sign Up'}
                 </button>
@@ -234,7 +219,7 @@ export default function AuthPage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={tab === 'login' ? handleLogin : handleSignup} className="flex flex-col gap-4">
+            <form onSubmit={tab === 'login' ? handleLogin : handleSignup} className="flex flex-col gap-3">
               {tab === 'signup' && (
                 <>
                   <Field id="name" label="Full Name" value={name} onChange={setName} placeholder="Ahmed Shaheen" />
@@ -284,7 +269,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={disabled}
-                className="mt-2 w-full py-4 rounded-xl text-sm font-black uppercase tracking-widest transition-all duration-150 active:scale-95"
+                className="mt-1 w-full py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all duration-150 active:scale-95"
                 style={{
                   fontFamily: 'var(--font-space)',
                   background: disabled ? 'rgba(215,255,0,0.08)' : 'var(--tgl-lime)',

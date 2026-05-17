@@ -250,18 +250,20 @@ function SummaryPage({ scores, overall, best, worst }: {
            overall >= PASS_THRESHOLD ? 'Good work. A few areas to polish.' :
            'Needs improvement. Review the sections below.'}
         </p>
-        {best && worst && (
+        {best && (
           <div className="flex gap-4 mt-5">
-            <div className="flex-1 p-3 rounded-xl" style={{ background: 'rgba(215,255,0,0.06)', border: '1px solid rgba(215,255,0,0.15)' }}>
+            <div className={`${worst && worst.pct < 1.0 ? 'flex-1' : 'w-full'} p-3 rounded-xl`} style={{ background: 'rgba(215,255,0,0.06)', border: '1px solid rgba(215,255,0,0.15)' }}>
               <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)' }}>Strongest</div>
               <div className="text-sm font-bold" style={{ color: 'var(--tgl-white)', fontFamily: 'var(--font-space)' }}>{best.label}</div>
               <div className="text-xs mt-0.5" style={{ color: 'rgba(215,255,0,0.8)', fontFamily: 'var(--font-montserrat)' }}>{Math.round(best.pct * 100)}%</div>
             </div>
-            <div className="flex-1 p-3 rounded-xl" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
-              <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(239,68,68,0.7)', fontFamily: 'var(--font-space)' }}>Needs Work</div>
-              <div className="text-sm font-bold" style={{ color: 'var(--tgl-white)', fontFamily: 'var(--font-space)' }}>{worst.label}</div>
-              <div className="text-xs mt-0.5" style={{ color: '#f87171', fontFamily: 'var(--font-montserrat)' }}>{Math.round(worst.pct * 100)}%</div>
-            </div>
+            {worst && worst.pct < 1.0 && (
+              <div className="flex-1 p-3 rounded-xl" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(239,68,68,0.7)', fontFamily: 'var(--font-space)' }}>Needs Work</div>
+                <div className="text-sm font-bold" style={{ color: 'var(--tgl-white)', fontFamily: 'var(--font-space)' }}>{worst.label}</div>
+                <div className="text-xs mt-0.5" style={{ color: '#f87171', fontFamily: 'var(--font-montserrat)' }}>{Math.round(worst.pct * 100)}%</div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -387,7 +389,7 @@ function PageNav({ current, total, onPrev, onNext }: { current: number; total: n
       <button
         onClick={onPrev}
         disabled={current === 0}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold"
+        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-150"
         style={{
           background: current === 0 ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)',
           color: current === 0 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.75)',
@@ -395,6 +397,8 @@ function PageNav({ current, total, onPrev, onNext }: { current: number; total: n
           fontFamily: 'var(--font-space)',
           cursor: current === 0 ? 'not-allowed' : 'pointer',
         }}
+        onMouseEnter={e => { if (current !== 0) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.14)'; }}
+        onMouseLeave={e => { if (current !== 0) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
       >
         ← Previous
       </button>
@@ -507,7 +511,7 @@ export default function ResultsPage() {
             {fromAdmin ? (
               <button
                 onClick={() => router.back()}
-                className="text-xs font-bold block"
+                className="text-xs font-bold block transition-opacity duration-150 hover:opacity-60"
                 style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 2 }}
               >
                 ← Back
@@ -515,7 +519,7 @@ export default function ResultsPage() {
             ) : (
               <button
                 onClick={() => router.push('/dashboard')}
-                className="text-xs font-bold block"
+                className="text-xs font-bold block transition-opacity duration-150 hover:opacity-60"
                 style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 2 }}
               >
                 ← Home
@@ -539,8 +543,10 @@ export default function ResultsPage() {
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="px-3 py-1.5 rounded-full text-xs font-bold"
-            style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'var(--font-space)', cursor: 'pointer' }}
+            className="px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-150"
+            style={{ background: 'rgba(163,230,53,0.12)', color: 'var(--tgl-lime)', border: '1px solid rgba(163,230,53,0.45)', fontFamily: 'var(--font-space)', cursor: downloading ? 'not-allowed' : 'pointer' }}
+            onMouseEnter={e => { if (!downloading) { (e.currentTarget as HTMLElement).style.background = 'var(--tgl-lime)'; (e.currentTarget as HTMLElement).style.color = '#000'; } }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(163,230,53,0.12)'; (e.currentTarget as HTMLElement).style.color = 'var(--tgl-lime)'; }}
           >
             {downloading ? '…' : '⬇ Report'}
           </button>
@@ -563,6 +569,8 @@ export default function ResultsPage() {
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
               }}
+              onMouseEnter={e => { if (i !== currentPage) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.85)'; } }}
+              onMouseLeave={e => { if (i !== currentPage) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.55)'; } }}
             >
               {p.label}
             </button>

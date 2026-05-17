@@ -112,6 +112,40 @@ export interface ManagedAgent {
   created_at: string;
 }
 
+export async function getManagerManagedAgents(managerUserId: string): Promise<ManagedAgent[]> {
+  const { data, error } = await supabase
+    .from('va_manager_managed_agents')
+    .select('id, agent_user_id, agent_email, agent_name, created_at')
+    .eq('manager_user_id', managerUserId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getSessionsForAgents(agentUserIds: string[]): Promise<{ session: Session; answers: Answer[] }[]> {
+  if (!agentUserIds.length) return [];
+  const { data: sessions, error: se } = await supabase
+    .from('va_sessions')
+    .select('*')
+    .in('user_id', agentUserIds)
+    .not('completed_at', 'is', null)
+    .order('completed_at', { ascending: false });
+  if (se) throw se;
+  if (!sessions?.length) return [];
+
+  const ids = sessions.map((s) => s.id);
+  const { data: answers, error: ae } = await supabase
+    .from('va_answers')
+    .select('*')
+    .in('session_id', ids);
+  if (ae) throw ae;
+
+  return sessions.map((session) => ({
+    session,
+    answers: (answers ?? []).filter((a) => a.session_id === session.id),
+  }));
+}
+
 export async function getAdminManagedAgents(adminUserId: string): Promise<ManagedAgent[]> {
   const { data, error } = await supabase
     .from('va_admin_managed_agents')

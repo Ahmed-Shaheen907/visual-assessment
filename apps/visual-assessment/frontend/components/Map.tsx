@@ -244,6 +244,7 @@ interface MapProps {
   onRemove?: (zoneId: string) => void;
   onLabelPlace?: (zoneId: string) => void;
   onDeselectLabel?: () => void;
+  onReady?: () => void;
 }
 
 export default function Map({
@@ -255,11 +256,18 @@ export default function Map({
   onRemove,
   onLabelPlace,
   onDeselectLabel,
+  onReady,
 }: MapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
 
   const handlePositions = useCallback((pos: Record<string, { x: number; y: number }>) => {
     setPositions(pos);
+  }, []);
+
+  useEffect(() => {
+    onReady?.();
+  // onReady intentionally excluded — we only call it once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

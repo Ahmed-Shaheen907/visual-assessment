@@ -21,12 +21,12 @@ import { cursorCollision } from '@/lib/utils/collision';
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
 const INITIAL_DROP_ZONES: DropZone[] = [
-  { id: 'zone-1', label: 'Marsa Matrouh',      lat: 31.3519, lng: 27.1817, accepted: null },
-  { id: 'zone-2', label: 'Sidi Heneish',        lat: 31.1630, lng: 27.6270, accepted: null },
-  { id: 'zone-3', label: 'Ras Al Hekma',        lat: 31.1944, lng: 27.7881, accepted: null },
-  { id: 'zone-4', label: 'El Dabaa',            lat: 31.0322, lng: 28.4444, accepted: null },
-  { id: 'zone-5', label: 'Sidi Abdel Rahman',   lat: 30.9619, lng: 28.7369, accepted: null },
-  { id: 'zone-6', label: 'New Alamein',         lat: 30.8572, lng: 28.8547, accepted: null },
+  { id: 'zone-1', label: 'Sidi Heneish',       lat: 31.1630, lng: 27.6270, accepted: null },
+  { id: 'zone-2', label: 'Ras Al Hekma',       lat: 31.1944, lng: 27.7881, accepted: null },
+  { id: 'zone-3', label: 'El Dabaa',           lat: 31.0322, lng: 28.4444, accepted: null },
+  { id: 'zone-4', label: 'Sidi Abdel Rahman',  lat: 30.9619, lng: 28.7369, accepted: null },
+  { id: 'zone-5', label: 'Marina',             lat: 30.826013, lng: 28.993615, accepted: null },
+  { id: 'zone-6', label: 'New Alamein',        lat: 30.8572, lng: 28.8547, accepted: null },
 ];
 
 const ANSWERS = INITIAL_DROP_ZONES.map((z, i) => ({ id: `ans-${i}`, label: z.label }));

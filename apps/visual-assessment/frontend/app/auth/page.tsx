@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { createProfile, getUserProfile } from '@/lib/supabase-helpers';
 
 type Tab = 'login' | 'signup';
+type SignupRole = 'agent' | 'leader';
 
 const inputStyle = {
   background: '#0d0d0d',
@@ -56,6 +57,7 @@ function Field({
 export default function AuthPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('login');
+  const [signupRole, setSignupRole] = useState<SignupRole>('agent');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -95,18 +97,18 @@ export default function AuthPage() {
       if (authError) throw authError;
 
       if (!data.session) {
-        // Email confirmation required — Supabase project has confirmations enabled
         setConfirmSent(true);
         setLoading(false);
         return;
       }
 
       const isAdmin = data.user!.email === 'manager@gmail.com';
+      const isManager = signupRole === 'leader';
       if (!isAdmin) {
-        await createProfile(data.user!.id, name.trim());
+        await createProfile(data.user!.id, name.trim(), isManager);
         localStorage.setItem('va_agent_name', name.trim());
       }
-      router.replace(isAdmin ? '/admin' : '/dashboard');
+      router.replace(isAdmin ? '/admin' : isManager ? '/manager' : '/dashboard');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Sign up failed';
       setError(msg.includes('already') ? 'An account with this email already exists.' : msg);
@@ -118,7 +120,7 @@ export default function AuthPage() {
 
   return (
     <main
-      className="min-h-screen flex flex-col items-center justify-center p-8"
+      className="min-h-screen flex flex-col items-center justify-center p-4"
       style={{ background: 'var(--tgl-black)' }}
     >
       {/* Background grain */}
@@ -142,14 +144,14 @@ export default function AuthPage() {
 
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
-        <div className="flex justify-center mb-10">
-          <Image src="/tgl-logo.png" alt="TGL" width={52} height={52} className="object-contain" />
+        <div className="flex justify-center mb-4">
+          <Image src="/tgl-logo.png" alt="TGL" width={40} height={40} className="object-contain" />
         </div>
 
         {/* Heading */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-5">
           <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-5"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3"
             style={{
               border: '1px solid rgba(215,255,0,0.25)',
               color: 'var(--tgl-lime)',
@@ -160,13 +162,13 @@ export default function AuthPage() {
             Sales Knowledge Assessment
           </div>
           <h1
-            className="text-4xl font-black tracking-tight leading-none mb-3"
+            className="text-3xl font-black tracking-tight leading-none mb-1"
             style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-white)', letterSpacing: '-0.03em' }}
           >
             North Coast
           </h1>
           <h2
-            className="text-4xl font-black tracking-tight leading-none mb-5"
+            className="text-3xl font-black tracking-tight leading-none mb-2"
             style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-lime)', letterSpacing: '-0.03em' }}
           >
             Assessment
@@ -210,7 +212,7 @@ export default function AuthPage() {
           <>
             {/* Tab switcher */}
             <div
-              className="flex rounded-xl mb-6 p-1"
+              className="flex rounded-xl mb-4 p-1"
               style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.08)' }}
             >
               {(['login', 'signup'] as const).map((t) => (
@@ -234,7 +236,41 @@ export default function AuthPage() {
             {/* Form */}
             <form onSubmit={tab === 'login' ? handleLogin : handleSignup} className="flex flex-col gap-4">
               {tab === 'signup' && (
-                <Field id="name" label="Full Name" value={name} onChange={setName} placeholder="Ahmed Shaheen" />
+                <>
+                  <Field id="name" label="Full Name" value={name} onChange={setName} placeholder="Ahmed Shaheen" />
+
+                  {/* Role selector */}
+                  <div className="flex flex-col gap-1.5">
+                    <span
+                      className="text-xs font-bold uppercase tracking-widest"
+                      style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-space)' }}
+                    >
+                      Account Type
+                    </span>
+                    <div className="flex gap-2">
+                      {([
+                        { value: 'agent', label: 'Sales Agent' },
+                        { value: 'leader', label: 'Team Leader' },
+                      ] as const).map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setSignupRole(opt.value)}
+                          className="flex-1 py-2 rounded-xl text-sm font-bold transition-all duration-150"
+                          style={{
+                            fontFamily: 'var(--font-space)',
+                            background: signupRole === opt.value ? 'rgba(215,255,0,0.12)' : '#0d0d0d',
+                            color: signupRole === opt.value ? 'var(--tgl-lime)' : 'rgba(255,255,255,0.4)',
+                            border: signupRole === opt.value ? '1px solid rgba(215,255,0,0.35)' : '1px solid rgba(255,255,255,0.08)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
               <Field id="email" label="Email Address" type="email" value={email} onChange={setEmail} placeholder="ahmed@company.com" />
               <Field id="password" label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" />
@@ -268,7 +304,7 @@ export default function AuthPage() {
         {/* Steps preview */}
         {!confirmSent && (
           <div
-            className="mt-10 flex items-center justify-center gap-3"
+            className="mt-5 flex items-center justify-center gap-3"
             style={{ color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--font-montserrat)', fontSize: 11 }}
           >
             {['Map Quiz', 'Section Detail', 'Q&A', 'Report'].map((step, i) => (

@@ -504,13 +504,21 @@ export default function ResultsPage() {
         <div className="flex items-center gap-3">
           <Image src="/tgl-logo.png" alt="TGL" width={36} height={36} className="object-contain" />
           <div>
-            {fromAdmin && (
+            {fromAdmin ? (
               <button
                 onClick={() => router.back()}
                 className="text-xs font-bold block"
                 style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 2 }}
               >
                 ← Back
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="text-xs font-bold block"
+                style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 2 }}
+              >
+                ← Home
               </button>
             )}
             <h1 className="text-base font-bold tracking-tight leading-none" style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-white)' }}>

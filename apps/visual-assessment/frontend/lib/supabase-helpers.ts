@@ -32,8 +32,8 @@ export interface Profile {
   is_manager: boolean;
 }
 
-export async function createProfile(userId: string, name: string): Promise<void> {
-  const { error } = await supabase.from('va_profiles').insert({ id: userId, name });
+export async function createProfile(userId: string, name: string, isManager = false): Promise<void> {
+  const { error } = await supabase.from('va_profiles').insert({ id: userId, name, is_manager: isManager });
   if (error) throw error;
 }
 

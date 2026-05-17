@@ -54,10 +54,10 @@ interface SectionScore {
 
 const LIME = '8BAF00';
 const RED = 'EF4444';
-const GREY = '888888';
-const WHITE = 'EEEEEE';
-const DARK_BG = '111111';
-const DARKER_BG = '0D0D0D';
+const GREY = '555555';
+const BLACK = '111111';
+const HEADER_BG = 'EEEEEE';
+const ROW_BG = 'FFFFFF';
 
 // ─── Paragraph helpers ────────────────────────────────────────────────────────
 
@@ -68,10 +68,11 @@ function h1(text: string): Paragraph {
   });
 }
 
-function h2(text: string): Paragraph {
+function h2(text: string, pageBreak = false): Paragraph {
   return new Paragraph({
-    children: [new TextRun({ text, bold: true, size: 28, color: WHITE, font: 'Calibri' })],
+    children: [new TextRun({ text, bold: true, size: 28, color: BLACK, font: 'Calibri' })],
     spacing: { before: 320, after: 100 },
+    pageBreakBefore: pageBreak,
   });
 }
 
@@ -79,10 +80,11 @@ function h3(text: string, color = GREY): Paragraph {
   return new Paragraph({
     children: [new TextRun({ text: text.toUpperCase(), bold: true, size: 20, color, font: 'Calibri' })],
     spacing: { before: 200, after: 60 },
+    pageBreakBefore: true,
   });
 }
 
-function meta(label: string, value: string, valueColor = WHITE): Paragraph {
+function meta(label: string, value: string, valueColor = BLACK): Paragraph {
   return new Paragraph({
     children: [
       new TextRun({ text: `${label}: `, size: 20, color: GREY, font: 'Calibri' }),
@@ -95,7 +97,7 @@ function meta(label: string, value: string, valueColor = WHITE): Paragraph {
 function divider(): Paragraph {
   return new Paragraph({
     children: [new TextRun({ text: '', size: 4 })],
-    border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: '333333' } },
+    border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' } },
     spacing: { before: 160, after: 160 },
   });
 }
@@ -107,7 +109,7 @@ function answerLines(row: AnswerRow, indent = 0): Paragraph[] {
     new Paragraph({
       children: [
         new TextRun({ text: `${icon}  `, bold: true, size: 20, color: iconColor, font: 'Calibri' }),
-        new TextRun({ text: row.questionLabel, size: 20, color: WHITE, font: 'Calibri' }),
+        new TextRun({ text: row.questionLabel, size: 20, color: BLACK, font: 'Calibri' }),
       ],
       indent: indent ? { left: indent } : undefined,
       spacing: { before: 80, after: 20 },
@@ -136,7 +138,7 @@ function answerLines(row: AnswerRow, indent = 0): Paragraph[] {
 
 function scoreTable(scores: SectionScore[]): Table {
   const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
-  const thinBorder = { style: BorderStyle.SINGLE, size: 1, color: '333333' };
+  const thinBorder = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' };
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder, insideHorizontal: thinBorder, insideVertical: noBorder },
@@ -147,7 +149,7 @@ function scoreTable(scores: SectionScore[]): Table {
           new TableCell({
             children: [new Paragraph({ children: [new TextRun({ text: t, bold: true, size: 18, color: GREY, font: 'Calibri' })] })],
             width: { size: [55, 20, 15, 10][i], type: WidthType.PERCENTAGE },
-            shading: { type: ShadingType.SOLID, color: DARKER_BG },
+            shading: { type: ShadingType.SOLID, color: HEADER_BG },
           })
         ),
       }),
@@ -161,8 +163,8 @@ function scoreTable(scores: SectionScore[]): Table {
             pass ? 'PASS' : 'REVIEW',
           ].map((t, i) =>
             new TableCell({
-              children: [new Paragraph({ children: [new TextRun({ text: t, size: 18, color: i >= 2 && pass ? LIME : i >= 2 ? RED : WHITE, bold: i >= 2, font: 'Calibri' })] })],
-              shading: { type: ShadingType.SOLID, color: DARK_BG },
+              children: [new Paragraph({ children: [new TextRun({ text: t, size: 18, color: i >= 2 && pass ? LIME : i >= 2 ? RED : BLACK, bold: i >= 2, font: 'Calibri' })] })],
+              shading: { type: ShadingType.SOLID, color: ROW_BG },
             })
           ),
         });
@@ -232,7 +234,7 @@ export async function generateReportDocx({
   // Improvement areas
   const weak = scores.filter(s => s.pct < 0.7);
   if (weak.length > 0) {
-    children.push(h2('Improvement Areas'));
+    children.push(h2('Improvement Areas', true));
     for (const s of weak) {
       children.push(new Paragraph({
         children: [new TextRun({ text: `${s.label}  —  ${Math.round(s.pct * 100)}%`, bold: true, size: 20, color: RED, font: 'Calibri' })],
@@ -252,7 +254,7 @@ export async function generateReportDocx({
     }],
     styles: {
       default: {
-        document: { run: { font: 'Calibri', size: 20, color: WHITE } },
+        document: { run: { font: 'Calibri', size: 20, color: BLACK } },
       },
     },
   });

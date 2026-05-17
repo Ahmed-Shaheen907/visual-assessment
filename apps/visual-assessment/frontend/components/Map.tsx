@@ -22,11 +22,11 @@ export interface DropZone {
 }
 
 const ZONE_COLORS: Record<string, string> = {
-  'zone-1': '#ff3cac',
-  'zone-2': '#a855f7',
-  'zone-3': '#f59e0b',
-  'zone-4': '#ef4444',
-  'zone-5': '#3b82f6',
+  'zone-1': '#a855f7',
+  'zone-2': '#f59e0b',
+  'zone-3': '#ef4444',
+  'zone-4': '#3b82f6',
+  'zone-5': '#ff3cac',
   'zone-6': '#10b981',
 };
 

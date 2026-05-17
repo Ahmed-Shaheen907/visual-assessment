@@ -131,6 +131,9 @@ Vercel auto-deploys on push to `master`. If there are merge conflicts, resolve t
 
 Do not ask the user if they want to push to the feature branch. Push immediately after finishing any code change. The task is not complete until the push to the feature branch succeeds.
 
+### After every code change — Non-Negotiable:
+After committing and pushing, always run `/deploy` to ship the change to the live URL so the user can test it immediately. Do not wait to be asked. The sequence is always: **code → commit → push → `/deploy`**.
+
 ---
 
 ## Communication Style — Non-Negotiable

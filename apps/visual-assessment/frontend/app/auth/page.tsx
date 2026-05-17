@@ -144,20 +144,20 @@ export default function AuthPage() {
 
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
-        <div className="flex justify-center mb-3">
-          <Image src="/tgl-logo.png" alt="TGL" width={32} height={32} className="object-contain" />
+        <div className="flex justify-center mb-4">
+          <Image src="/tgl-logo.png" alt="TGL" width={40} height={40} className="object-contain" />
         </div>
 
         {/* Heading */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-6">
           <h1
-            className="text-2xl font-black tracking-tight leading-none mb-0.5"
+            className="text-3xl font-black tracking-tight leading-none mb-1"
             style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-white)', letterSpacing: '-0.03em' }}
           >
             North Coast
           </h1>
           <h2
-            className="text-2xl font-black tracking-tight leading-none mb-0"
+            className="text-3xl font-black tracking-tight leading-none"
             style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-lime)', letterSpacing: '-0.03em' }}
           >
             Assessment

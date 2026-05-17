@@ -30,6 +30,8 @@ Each app frontend uses its own `apps/<app-name>/frontend/.env.local` for Supabas
 | **Vercel MCP** | Deploy, check deployment status, manage env vars |
 | **n8n MCP** | If backend automation is ever added |
 | **frontend-design skill** | Invoke before writing any frontend code, every session, no exceptions |
+| **/deploy skill** | Deploy the current feature branch to the live URL for testing. Always deploys with `--prod` from `apps/visual-assessment/frontend/`. |
+| **/works skill** | Run when the branch is confirmed working. Merges current branch into master, pushes, and deploys master to production. |
 
 ---
 
@@ -128,6 +130,17 @@ git push
 Vercel auto-deploys on push to `master`. If there are merge conflicts, resolve them before pushing.
 
 Do not ask the user if they want to push to the feature branch. Push immediately after finishing any code change. The task is not complete until the push to the feature branch succeeds.
+
+---
+
+## Communication Style — Non-Negotiable
+
+The user is learning how the code works through this collaboration. After every fix or new feature, always explain:
+1. **What the problem was** — in plain words, like "the admin had no profile in the database, so the system thought it wasn't a manager"
+2. **What was changed** — which file, which line, what it now does differently
+3. **Why that fixes it** — connect the change back to the problem
+
+Keep it simple and technical at the same time. No jargon without definition. Think of it as mentoring, not just delivering code.
 
 ---
 

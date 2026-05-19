@@ -36,11 +36,11 @@ function computePhaseScore(answers: Answer[], phaseKey: string) {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [rows, setRows] = useState<{ session: Session; answers: Answer[] }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile]   = useState<Profile | null>(null);
+  const [rows, setRows]         = useState<{ session: Session; answers: Answer[] }[]>([]);
+  const [loading, setLoading]   = useState(true);
   const [starting, setStarting] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId]     = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -83,54 +83,98 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center" style={{ background: 'var(--tgl-black)' }}>
-        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-montserrat)' }}>Loading…</p>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%',
+            border: '2px solid rgba(215,255,0,0.1)',
+            borderTopColor: 'var(--tgl-lime)',
+            animation: 'spin 0.8s linear infinite',
+            boxShadow: '0 0 14px rgba(215,255,0,0.2)',
+          }} />
+          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, fontFamily: 'var(--font-montserrat)' }}>Loading…</p>
+        </div>
       </main>
     );
   }
 
   return (
     <main className="min-h-screen flex flex-col" style={{ background: 'var(--tgl-black)' }}>
-      {/* Header */}
+
+      {/* ── Header ── */}
       <header
         className="px-6 py-4 flex items-center justify-between shrink-0"
-        style={{ borderBottom: '1px solid rgba(215,255,0,0.12)' }}
+        style={{
+          borderBottom: '1px solid rgba(215,255,0,0.1)',
+          boxShadow: '0 1px 0 rgba(215,255,0,0.05), 0 4px 24px rgba(0,0,0,0.4)',
+          background: 'rgba(0,0,0,0.96)',
+          backdropFilter: 'blur(20px)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 30,
+        }}
       >
         <div className="flex items-center gap-3">
           <Image src="/tgl-logo.png" alt="TGL" width={36} height={36} className="object-contain" />
           <div>
-            <h1 className="text-lg font-bold tracking-tight leading-none" style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-white)' }}>
+            <h1
+              className="text-lg font-bold leading-none"
+              style={{
+                fontFamily: 'var(--font-space)',
+                color: 'var(--tgl-white)',
+                letterSpacing: '-0.02em',
+              }}
+            >
               {profile?.name ?? 'My Dashboard'}
             </h1>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-montserrat)' }}>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-montserrat)' }}>
               North Coast Assessment
             </p>
           </div>
         </div>
+
         <div className="flex items-center gap-3">
           <button
             onClick={handleStartAssessment}
             disabled={starting}
-            className="px-5 py-2 rounded-full text-sm font-bold transition-all duration-150 active:scale-95"
+            className="px-5 py-2 rounded-full text-sm font-bold active:scale-95"
             style={{
               fontFamily: 'var(--font-space)',
               background: starting ? 'rgba(215,255,0,0.08)' : 'var(--tgl-lime)',
               color: starting ? 'rgba(215,255,0,0.3)' : '#000',
-              border: starting ? '1px solid rgba(215,255,0,0.15)' : 'none',
-              boxShadow: starting ? 'none' : 'var(--glow-lime-sm)',
+              border: starting ? '1px solid rgba(215,255,0,0.12)' : 'none',
+              boxShadow: starting ? 'none' : '0 0 16px rgba(215,255,0,0.35), 0 0 40px rgba(215,255,0,0.1)',
               cursor: starting ? 'not-allowed' : 'pointer',
+              transition: 'box-shadow 150ms ease',
+              letterSpacing: '-0.01em',
+            }}
+            onMouseEnter={e => {
+              if (!starting) (e.currentTarget as HTMLElement).style.boxShadow = '0 0 24px rgba(215,255,0,0.55), 0 0 60px rgba(215,255,0,0.16)';
+            }}
+            onMouseLeave={e => {
+              if (!starting) (e.currentTarget as HTMLElement).style.boxShadow = '0 0 16px rgba(215,255,0,0.35), 0 0 40px rgba(215,255,0,0.1)';
             }}
           >
             {starting ? 'Starting…' : '+ New Assessment'}
           </button>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 rounded-full text-xs font-bold transition-opacity hover:opacity-60"
+            className="px-4 py-2 rounded-full text-xs font-bold"
             style={{
               fontFamily: 'var(--font-space)',
-              color: 'rgba(255,255,255,0.4)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              color: 'rgba(255,255,255,0.35)',
+              border: '1px solid rgba(255,255,255,0.08)',
               background: 'transparent',
               cursor: 'pointer',
+              transition: 'color 150ms, border-color 150ms',
+              letterSpacing: '-0.01em',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)';
+              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.18)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)';
+              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
             }}
           >
             Log Out
@@ -138,34 +182,83 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="flex-1 px-6 py-8">
+      <div className="flex-1 px-6 py-10">
         {rows.length === 0 ? (
-          /* Empty state */
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
-              style={{ background: 'rgba(215,255,0,0.06)', border: '1px solid rgba(215,255,0,0.15)' }}
-            >
-              <span style={{ fontSize: 28 }}>🗺️</span>
+          /* ── Empty state ── */
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            {/* Glow + icon */}
+            <div style={{ position: 'relative', marginBottom: 28 }}>
+              <div style={{
+                position: 'absolute',
+                inset: -40,
+                background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(215,255,0,0.1) 0%, transparent 70%)',
+                pointerEvents: 'none',
+              }} />
+              <div
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: 22,
+                  background: 'rgba(215,255,0,0.06)',
+                  border: '1px solid rgba(215,255,0,0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  boxShadow: '0 0 40px rgba(215,255,0,0.08), inset 0 1px 0 rgba(215,255,0,0.1)',
+                }}
+              >
+                <span style={{ fontSize: 32 }}>🗺️</span>
+              </div>
             </div>
-            <h2 className="text-xl font-bold mb-2" style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-white)' }}>
+
+            <h2
+              className="text-2xl font-bold mb-3"
+              style={{
+                fontFamily: 'var(--font-space)',
+                color: 'var(--tgl-white)',
+                letterSpacing: '-0.03em',
+                lineHeight: 1.1,
+              }}
+            >
               No assessments yet
             </h2>
-            <p className="text-sm mb-8" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-montserrat)', maxWidth: 280 }}>
-              Start your first North Coast assessment to test your knowledge and track your progress.
+            <p
+              className="text-sm mb-10"
+              style={{
+                color: 'rgba(255,255,255,0.38)',
+                fontFamily: 'var(--font-montserrat)',
+                maxWidth: 300,
+                lineHeight: 1.7,
+              }}
+            >
+              Start your first North Coast assessment to test your knowledge and track your progress over time.
             </p>
             <button
               onClick={handleStartAssessment}
               disabled={starting}
-              className="px-8 py-4 rounded-xl text-sm font-black uppercase tracking-widest transition-all duration-150 active:scale-95"
+              className="px-10 py-4 rounded-2xl text-sm font-black uppercase tracking-widest active:scale-95"
               style={{
                 fontFamily: 'var(--font-space)',
                 background: starting ? 'rgba(215,255,0,0.08)' : 'var(--tgl-lime)',
                 color: starting ? 'rgba(215,255,0,0.3)' : '#000',
-                boxShadow: starting ? 'none' : 'var(--glow-lime)',
+                boxShadow: starting ? 'none' : '0 0 24px rgba(215,255,0,0.45), 0 0 60px rgba(215,255,0,0.15)',
                 border: 'none',
                 cursor: starting ? 'not-allowed' : 'pointer',
                 letterSpacing: '0.08em',
+                transition: 'box-shadow 150ms ease, transform 150ms ease',
+              }}
+              onMouseEnter={e => {
+                if (!starting) {
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 0 36px rgba(215,255,0,0.65), 0 0 80px rgba(215,255,0,0.2)';
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={e => {
+                if (!starting) {
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 0 24px rgba(215,255,0,0.45), 0 0 60px rgba(215,255,0,0.15)';
+                  (e.currentTarget as HTMLElement).style.transform = '';
+                }
               }}
             >
               {starting ? 'Starting…' : 'Begin Assessment →'}
@@ -173,34 +266,98 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
+            {/* ── History header ── */}
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-base font-bold" style={{ fontFamily: 'var(--font-space)', color: 'rgba(255,255,255,0.6)' }}>
-                Assessment History
-              </h2>
-              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-montserrat)' }}>
-                {rows.length} completed
-              </span>
+              <div>
+                <h2
+                  className="text-lg font-bold"
+                  style={{
+                    fontFamily: 'var(--font-space)',
+                    color: 'rgba(255,255,255,0.9)',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  Assessment History
+                </h2>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-montserrat)' }}>
+                  {rows.length} {rows.length === 1 ? 'session' : 'sessions'} completed
+                </p>
+              </div>
+              <button
+                onClick={handleStartAssessment}
+                disabled={starting}
+                className="px-4 py-2 rounded-xl text-xs font-bold active:scale-95"
+                style={{
+                  fontFamily: 'var(--font-space)',
+                  background: starting ? 'rgba(215,255,0,0.06)' : 'rgba(215,255,0,0.1)',
+                  color: starting ? 'rgba(215,255,0,0.3)' : 'var(--tgl-lime)',
+                  border: '1px solid rgba(215,255,0,0.2)',
+                  cursor: starting ? 'not-allowed' : 'pointer',
+                  boxShadow: starting ? 'none' : '0 0 10px rgba(215,255,0,0.12)',
+                  letterSpacing: '-0.01em',
+                  transition: 'all 150ms ease',
+                }}
+                onMouseEnter={e => {
+                  if (!starting) (e.currentTarget as HTMLElement).style.background = 'rgba(215,255,0,0.16)';
+                }}
+                onMouseLeave={e => {
+                  if (!starting) (e.currentTarget as HTMLElement).style.background = 'rgba(215,255,0,0.1)';
+                }}
+              >
+                {starting ? 'Starting…' : '+ New Assessment'}
+              </button>
             </div>
 
-            <div className="rounded-2xl overflow-hidden overflow-x-auto" style={{ border: '1px solid rgba(215,255,0,0.1)', minWidth: 700 }}>
+            {/* ── Table ── */}
+            <div
+              className="rounded-2xl overflow-hidden overflow-x-auto"
+              style={{
+                border: '1px solid rgba(215,255,0,0.1)',
+                boxShadow: '0 0 40px rgba(215,255,0,0.04)',
+                minWidth: 700,
+              }}
+            >
               <table className="w-full border-collapse">
                 <thead>
-                  <tr style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <th className="px-5 py-3 text-left">
-                      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)' }}>Date</span>
+                  <tr
+                    style={{
+                      background: 'linear-gradient(180deg, #111111 0%, #0d0d0d 100%)',
+                      borderBottom: '1px solid rgba(215,255,0,0.08)',
+                    }}
+                  >
+                    <th className="px-5 py-3.5 text-left">
+                      <span
+                        className="text-xs font-bold uppercase tracking-widest"
+                        style={{ color: 'rgba(215,255,0,0.5)', fontFamily: 'var(--font-space)' }}
+                      >
+                        Date
+                      </span>
                     </th>
                     {COLUMNS.map((col) => (
-                      <th key={col.key} className="px-3 py-3 text-center">
-                        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-space)' }}>
+                      <th key={col.key} className="px-3 py-3.5 text-center">
+                        <span
+                          className="text-xs font-bold uppercase tracking-widest"
+                          style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-space)' }}
+                        >
                           {col.label}
                         </span>
                       </th>
                     ))}
-                    <th className="px-3 py-3 text-center">
-                      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)' }}>Total</span>
+                    <th className="px-3 py-3.5 text-center">
+                      <span
+                        className="text-xs font-bold uppercase tracking-widest"
+                        style={{ color: 'rgba(215,255,0,0.5)', fontFamily: 'var(--font-space)' }}
+                      >
+                        Total
+                      </span>
                     </th>
-                    <th className="px-3 py-3 text-center">
-                      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-space)' }}>Report</span>
+                    <th className="px-3 py-3.5 text-center">
+                      <span
+                        className="text-xs font-bold uppercase tracking-widest"
+                        style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-space)' }}
+                      >
+                        Report
+                      </span>
                     </th>
                   </tr>
                 </thead>
@@ -208,34 +365,56 @@ export default function DashboardPage() {
                   {rows.map(({ session, answers }, i) => {
                     const overall = computeOverall(answers);
                     const passing = overall >= PASS_THRESHOLD;
-                    const date = session.completed_at
+                    const date    = session.completed_at
                       ? new Date(session.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
                       : '—';
 
                     return (
                       <tr
                         key={session.id}
-                        style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
+                        style={{
+                          borderTop: '1px solid rgba(255,255,255,0.04)',
+                          background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.012)',
+                          transition: 'background 150ms ease',
+                          cursor: 'default',
+                        }}
+                        onMouseEnter={e => {
+                          (e.currentTarget as HTMLElement).style.background = 'rgba(215,255,0,0.025)';
+                        }}
+                        onMouseLeave={e => {
+                          (e.currentTarget as HTMLElement).style.background = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.012)';
+                        }}
                       >
-                        <td className="px-5 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'var(--font-montserrat)' }}>
+                        <td
+                          className="px-5 py-3.5 text-sm"
+                          style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-montserrat)' }}
+                        >
                           {date}
                         </td>
                         {COLUMNS.map((col) => {
                           const score = computePhaseScore(answers, col.key);
                           if (!score) {
                             return (
-                              <td key={col.key} className="px-3 py-3 text-center" style={{ color: 'rgba(255,255,255,0.15)', fontSize: 12, fontFamily: 'var(--font-montserrat)' }}>—</td>
+                              <td
+                                key={col.key}
+                                className="px-3 py-3.5 text-center"
+                                style={{ color: 'rgba(255,255,255,0.12)', fontSize: 12, fontFamily: 'var(--font-montserrat)' }}
+                              >
+                                —
+                              </td>
                             );
                           }
                           const ok = score.pct >= PASS_THRESHOLD;
                           return (
-                            <td key={col.key} className="px-3 py-3 text-center">
+                            <td key={col.key} className="px-3 py-3.5 text-center">
                               <span
-                                className="text-xs font-bold px-2 py-0.5 rounded-full"
+                                className="text-xs font-bold px-2.5 py-1 rounded-full"
                                 style={{
                                   color: ok ? 'var(--tgl-lime)' : '#ef4444',
                                   background: ok ? 'rgba(215,255,0,0.08)' : 'rgba(239,68,68,0.08)',
+                                  border: `1px solid ${ok ? 'rgba(215,255,0,0.15)' : 'rgba(239,68,68,0.15)'}`,
                                   fontFamily: 'var(--font-space)',
+                                  boxShadow: ok ? '0 0 8px rgba(215,255,0,0.1)' : 'none',
                                 }}
                               >
                                 {Math.round(score.pct * 100)}%
@@ -243,22 +422,43 @@ export default function DashboardPage() {
                             </td>
                           );
                         })}
-                        <td className="px-3 py-3 text-center">
+                        <td className="px-3 py-3.5 text-center">
                           <span
-                            className="text-sm font-black px-2 py-0.5 rounded-full"
+                            className="text-sm font-black"
                             style={{
                               color: passing ? 'var(--tgl-lime)' : '#ef4444',
                               fontFamily: 'var(--font-space)',
+                              textShadow: passing ? '0 0 10px rgba(215,255,0,0.35)' : '0 0 10px rgba(239,68,68,0.3)',
+                              letterSpacing: '-0.02em',
                             }}
                           >
                             {Math.round(overall * 100)}%
                           </span>
                         </td>
-                        <td className="px-3 py-3 text-center">
+                        <td className="px-3 py-3.5 text-center">
                           <a
                             href={`/results/${session.id}`}
-                            className="text-xs font-bold transition-opacity duration-150 hover:opacity-60"
-                            style={{ color: 'var(--tgl-lime)', fontFamily: 'var(--font-space)', textDecoration: 'none' }}
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              fontFamily: 'var(--font-space)',
+                              color: 'rgba(215,255,0,0.6)',
+                              textDecoration: 'none',
+                              background: 'rgba(215,255,0,0.06)',
+                              border: '1px solid rgba(215,255,0,0.15)',
+                              borderRadius: 8,
+                              padding: '4px 10px',
+                              display: 'inline-block',
+                              transition: 'all 150ms ease',
+                            }}
+                            onMouseEnter={e => {
+                              (e.currentTarget as HTMLElement).style.background = 'rgba(215,255,0,0.12)';
+                              (e.currentTarget as HTMLElement).style.color = 'var(--tgl-lime)';
+                            }}
+                            onMouseLeave={e => {
+                              (e.currentTarget as HTMLElement).style.background = 'rgba(215,255,0,0.06)';
+                              (e.currentTarget as HTMLElement).style.color = 'rgba(215,255,0,0.6)';
+                            }}
                           >
                             View →
                           </a>

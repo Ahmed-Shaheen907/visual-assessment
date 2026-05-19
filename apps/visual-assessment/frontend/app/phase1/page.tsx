@@ -15,6 +15,7 @@ import {
 } from '@dnd-kit/core';
 import { cursorCollision } from '@/lib/utils/collision';
 import DraggableAnswer from '@/components/DraggableAnswer';
+import ConfirmModal from '@/components/ConfirmModal';
 import PinQuizPanel from '@/components/PinQuizPanel';
 import type { DropZone } from '@/components/Map';
 import type { QuizPhase } from '@/components/ZoomedMap';
@@ -23,6 +24,15 @@ import { PIN_QUIZZES } from '@/lib/data/pin-quizzes';
 import { saveAnswers } from '@/lib/supabase-helpers';
 
 const ZoomedMap = dynamic(() => import('@/components/ZoomedMap'), { ssr: false });
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 function buildZones(sectionIdx: number): DropZone[] {
   return SECTIONS[sectionIdx].landmarks.map((lm) => ({
@@ -34,62 +44,73 @@ function buildZones(sectionIdx: number): DropZone[] {
   }));
 }
 
+function buildDisplayAnswers(zones: DropZone[]) {
+  return shuffle(zones.map((z, i) => ({ id: `ans-${i}`, label: z.label })));
+}
+
 export default function Phase1Page() {
   const router = useRouter();
-  const [sectionIndex, setSectionIndex] = useState(0);
-  const [activeBoundsIndex, setActiveBoundsIndex] = useState(0);
-  const [transitioning, setTransitioning] = useState(true);
-  const [dropZones, setDropZones] = useState<DropZone[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [saving, setSaving] = useState(false);
 
-  // Click-to-place state
+  const [sectionIndex, setSectionIndex]       = useState(0);
+  const [activeBoundsIndex, setActiveBoundsIndex] = useState(0);
+  const [transitioning, setTransitioning]     = useState(true);
+  const [dropZones, setDropZones]             = useState<DropZone[]>([]);
+  const [displayAnswers, setDisplayAnswers]   = useState<{ id: string; label: string }[]>([]);
+  const [activeId, setActiveId]               = useState<string | null>(null);
+  const [submitted, setSubmitted]             = useState(false);
+  const [saving, setSaving]                   = useState(false);
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
+  const [showLeaveModal, setShowLeaveModal]   = useState(false);
+  const [showSkipModal, setShowSkipModal]     = useState(false);
 
   // Quiz mode state machine
-  const [quizPhase, setQuizPhase] = useState<QuizPhase>('idle');
+  const [quizPhase, setQuizPhase]             = useState<QuizPhase>('idle');
   const [activePinQuizId, setActivePinQuizId] = useState<string | null>(null);
   const [activePinTarget, setActivePinTarget] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
-  const [quizSubmitting, setQuizSubmitting] = useState(false);
+  const [quizSubmitting, setQuizSubmitting]   = useState(false);
   const [completedQuizPinIds, setCompletedQuizPinIds] = useState<Set<string>>(new Set());
-  const [starBlinking, setStarBlinking] = useState(false);
-  const [showQuizPrompt, setShowQuizPrompt] = useState(false);
+  const [starBlinking, setStarBlinking]       = useState(false);
+  const [showQuizPrompt, setShowQuizPrompt]   = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDropZones(buildZones(0));
+      const zones = buildZones(0);
+      setDropZones(zones);
+      setDisplayAnswers(buildDisplayAnswers(zones));
       setTransitioning(false);
     }, 1800);
     return () => clearTimeout(timer);
   }, []);
 
-  const quizPinIds = new Set(PIN_QUIZZES.map((q) => q.landmarkId));
-  const activePinQuiz = PIN_QUIZZES.find((q) => q.landmarkId === activePinQuizId) ?? null;
+  const quizPinIds     = new Set(PIN_QUIZZES.map((q) => q.landmarkId));
+  const activePinQuiz  = PIN_QUIZZES.find((q) => q.landmarkId === activePinQuizId) ?? null;
+  const section        = SECTIONS[sectionIndex];
+  const activeBounds   = SECTIONS[activeBoundsIndex].bounds;
+  const placedLabels   = dropZones.map((z) => z.accepted).filter(Boolean) as string[];
+  const allPlaced      = dropZones.length === 0 || placedLabels.length === dropZones.length;
+  const remaining      = dropZones.length - placedLabels.length;
 
-  const section = SECTIONS[sectionIndex];
-  const activeBounds = SECTIONS[activeBoundsIndex].bounds;
-  const answers = SECTIONS[sectionIndex].landmarks.map((lm) => {
-    const zone = dropZones.find((z) => z.id === lm.id);
-    return zone ?? { id: lm.id, label: lm.label, lat: lm.lat, lng: lm.lng, accepted: null };
-  });
-
-  const placedLabels = dropZones.map((z) => z.accepted).filter(Boolean) as string[];
-  const allPlaced = dropZones.length === 0 || placedLabels.length === dropZones.length;
   const sectionQuizPinIds = section.landmarks
     .filter((lm) => quizPinIds.has(lm.id))
     .map((lm) => lm.id);
   const allSectionQuizDone =
     sectionQuizPinIds.length === 0 ||
     sectionQuizPinIds.every((id) => completedQuizPinIds.has(id));
-  const correctCount = dropZones.filter((z) => z.accepted === z.label).length;
-  const activeAnswer = dropZones
+
+  const correctCount  = dropZones.filter((z) => z.accepted === z.label).length;
+  const activeAnswer  = dropZones
     .map((z, i) => ({ id: `ans-${i}`, label: z.label }))
     .find((a) => a.id === activeId);
-
-  const isAdmin = typeof window !== 'undefined' && localStorage.getItem('va_user_email') === 'admin@gmail.com';
+  const progress      = (sectionIndex / SECTIONS.length) * 100;
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  // Drive layout widths from quiz phase
+  const quizActive         = quizPhase === 'transitioning' || quizPhase === 'active';
+  const MAP_NORMAL_WIDTH   = 'calc(100% - 228px)';
+  const MAP_QUIZ_WIDTH     = '40%';
+  const SIDEBAR_NORMAL_WIDTH = '208px';
+  const SIDEBAR_QUIZ_WIDTH = '60%';
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string);
@@ -100,8 +121,8 @@ export default function Phase1Page() {
     if (submitted) return;
     const { active, over } = event;
     if (!over) return;
-    const idx = parseInt((active.id as string).replace('ans-', ''), 10);
-    const answer = dropZones[idx];
+    const idx        = parseInt((active.id as string).replace('ans-', ''), 10);
+    const answer     = dropZones[idx];
     const targetZone = dropZones.find((z) => z.id === (over.id as string));
     if (!answer || !targetZone) return;
     setDropZones((prev) =>
@@ -121,7 +142,7 @@ export default function Phase1Page() {
 
   function handleLabelPlace(zoneId: string) {
     if (!selectedLabelId || submitted) return;
-    const idx = parseInt(selectedLabelId.replace('ans-', ''), 10);
+    const idx       = parseInt(selectedLabelId.replace('ans-', ''), 10);
     const labelText = dropZones[idx]?.label;
     if (!labelText) return;
     setDropZones((prev) => prev.map((z) => z.id === zoneId ? { ...z, accepted: labelText } : z));
@@ -140,17 +161,13 @@ export default function Phase1Page() {
     setStarBlinking(false);
     setShowQuizPrompt(false);
     setSelectedLabelId(null);
-    setActivePinQuizId(zoneId);       // pin disappears immediately (hiddenPinId)
+    setActivePinQuizId(zoneId);
     setActivePinTarget(quiz.focusPoint);
     setQuizPhase('zooming');
 
-    // t=2000ms: layout starts shifting, map starts fading
     setTimeout(() => {
       setQuizPhase('transitioning');
-      // t=2800ms: PNG fades in, quiz panel appears
-      setTimeout(() => {
-        setQuizPhase('active');
-      }, 800);
+      setTimeout(() => { setQuizPhase('active'); }, 800);
     }, 2000);
   }
 
@@ -175,18 +192,33 @@ export default function Phase1Page() {
     setCompletedQuizPinIds((prev) => new Set([...prev, activePinQuizId!]));
     setStarBlinking(false);
     setShowQuizPrompt(false);
-    // Reset everything — layout transitions back via CSS
     setQuizPhase('idle');
     setActivePinQuizId(null);
     setActivePinTarget(null);
   }, [activePinQuiz, activePinQuizId]);
 
-  const handleSkip = useCallback(async () => {
+  function advanceSection(nextIdx: number, zones: DropZone[]) {
+    setTransitioning(true);
+    setActiveBoundsIndex(nextIdx);
+    setTimeout(() => {
+      setSectionIndex(nextIdx);
+      setDropZones(zones);
+      setDisplayAnswers(buildDisplayAnswers(zones));
+      setSubmitted(false);
+      setTransitioning(false);
+      setStarBlinking(false);
+      setShowQuizPrompt(false);
+      setSelectedLabelId(null);
+      setCompletedQuizPinIds(new Set());
+    }, 1800);
+  }
+
+  const handleSkipConfirm = useCallback(async () => {
     if (saving) return;
+    setShowSkipModal(false);
     setSaving(true);
     const sessionId = localStorage.getItem('va_session_id');
     if (sessionId) {
-      // Save any incomplete section quizzes as all wrong
       for (const quizPinId of sectionQuizPinIds) {
         if (!completedQuizPinIds.has(quizPinId)) {
           const quiz = PIN_QUIZZES.find((q) => q.landmarkId === quizPinId);
@@ -200,7 +232,6 @@ export default function Phase1Page() {
           }
         }
       }
-      // Save section landmark answers — placed ones keep their answer, unplaced = null/wrong
       if (dropZones.length > 0) {
         await saveAnswers(sessionId, dropZones.map((z) => ({
           phase: `phase1_${section.id}`,
@@ -212,19 +243,9 @@ export default function Phase1Page() {
     }
     setSaving(false);
     if (sectionIndex < SECTIONS.length - 1) {
-      const nextIdx = sectionIndex + 1;
-      setTransitioning(true);
-      setActiveBoundsIndex(nextIdx);
-      setTimeout(() => {
-        setSectionIndex(nextIdx);
-        setDropZones(buildZones(nextIdx));
-        setSubmitted(false);
-        setTransitioning(false);
-        setStarBlinking(false);
-        setShowQuizPrompt(false);
-        setSelectedLabelId(null);
-        setCompletedQuizPinIds(new Set());
-      }, 1800);
+      const nextIdx   = sectionIndex + 1;
+      const nextZones = buildZones(nextIdx);
+      advanceSection(nextIdx, nextZones);
     } else {
       router.push('/quiz');
     }
@@ -242,375 +263,606 @@ export default function Phase1Page() {
       })));
     }
     setSaving(false);
-
     if (sectionIndex < SECTIONS.length - 1) {
-      const nextIdx = sectionIndex + 1;
-      setTransitioning(true);
-      setActiveBoundsIndex(nextIdx);
-      setTimeout(() => {
-        setSectionIndex(nextIdx);
-        setDropZones(buildZones(nextIdx));
-        setSubmitted(false);
-        setTransitioning(false);
-        setStarBlinking(false);
-        setShowQuizPrompt(false);
-        setSelectedLabelId(null);
-      }, 1800);
+      const nextIdx   = sectionIndex + 1;
+      const nextZones = buildZones(nextIdx);
+      advanceSection(nextIdx, nextZones);
     } else {
       router.push('/quiz');
     }
   }, [dropZones, sectionIndex, section.id, router]);
 
-  const progress = (sectionIndex / SECTIONS.length) * 100;
-
-  // Drive layout widths from quiz phase
-  const quizActive = quizPhase === 'transitioning' || quizPhase === 'active';
-  const MAP_NORMAL_WIDTH = 'calc(100% - 228px)'; // fill - (208px sidebar + 20px gap)
-  const MAP_QUIZ_WIDTH = '40%';
-  const SIDEBAR_NORMAL_WIDTH = '208px';
-  const SIDEBAR_QUIZ_WIDTH = '60%';
-
   return (
-    <DndContext sensors={sensors} collisionDetection={cursorCollision} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="min-h-screen flex flex-col" style={{ background: 'var(--tgl-black)' }}>
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={cursorCollision}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="min-h-screen flex flex-col" style={{ background: 'var(--tgl-black)' }}>
 
-        {/* Header */}
-        <header
-          className="px-6 py-4 flex items-center justify-between shrink-0"
-          style={{ borderBottom: '1px solid rgba(215,255,0,0.12)' }}
-        >
-          <div className="flex items-center gap-3">
-            <Image src="/tgl-logo.png" alt="TGL" width={36} height={36} className="object-contain" />
-            <div>
-              <h1
-                className="text-lg font-bold tracking-tight leading-none"
-                style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-white)' }}
+          {/* ── Header ── */}
+          <header
+            className="px-5 py-3.5 flex items-center gap-3 shrink-0"
+            style={{
+              borderBottom: '1px solid rgba(215,255,0,0.1)',
+              boxShadow: '0 1px 0 rgba(215,255,0,0.05), 0 4px 24px rgba(0,0,0,0.4)',
+              background: 'rgba(0,0,0,0.96)',
+              backdropFilter: 'blur(20px)',
+              position: 'sticky',
+              top: 0,
+              zIndex: 30,
+            }}
+          >
+            {/* Back / leave button */}
+            <button
+              onClick={() => setShowLeaveModal(true)}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 10,
+                color: 'rgba(255,255,255,0.45)',
+                width: 36,
+                height: 36,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: 17,
+                fontFamily: 'var(--font-space)',
+                flexShrink: 0,
+                transition: 'background 150ms, color 150ms',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)';
+                (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.9)';
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)';
+                (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)';
+              }}
+              title="Leave assessment"
+            >
+              ←
+            </button>
+
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Image src="/tgl-logo.png" alt="TGL" width={34} height={34} className="object-contain shrink-0" />
+              <div className="min-w-0">
+                <h1
+                  className="font-bold leading-none truncate"
+                  style={{
+                    fontFamily: 'var(--font-space)',
+                    fontSize: 15,
+                    color: 'var(--tgl-white)',
+                    letterSpacing: '-0.02em',
+                    textShadow: '0 0 20px rgba(215,255,0,0.15)',
+                  }}
+                >
+                  {section.label}
+                </h1>
+                <p
+                  className="text-xs mt-0.5 truncate"
+                  style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-montserrat)' }}
+                >
+                  {submitted
+                    ? 'Section Complete'
+                    : `Section ${sectionIndex + 1} of ${SECTIONS.length} — Label the landmarks`}
+                </p>
+              </div>
+            </div>
+
+            {/* Section counter + progress dots */}
+            <div className="flex items-center gap-2 shrink-0">
+              {SECTIONS.map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: i === sectionIndex ? 20 : 6,
+                    height: 6,
+                    borderRadius: 99,
+                    background: i < sectionIndex
+                      ? 'rgba(215,255,0,0.5)'
+                      : i === sectionIndex
+                        ? 'var(--tgl-lime)'
+                        : 'rgba(255,255,255,0.12)',
+                    boxShadow: i === sectionIndex ? '0 0 8px rgba(215,255,0,0.6)' : 'none',
+                    transition: 'width 0.3s ease, background 0.3s ease',
+                    animation: i === sectionIndex ? 'pin-pulse-ring 2s ease-in-out infinite' : 'none',
+                  }}
+                />
+              ))}
+            </div>
+          </header>
+
+          {/* ── Progress bar ── */}
+          <div className="shrink-0 px-6 pt-3 pb-1">
+            <div className="flex items-center justify-between mb-1.5">
+              <span
+                className="text-xs font-medium"
+                style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-montserrat)' }}
               >
-                {section.label}
-              </h1>
-              <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-montserrat)' }}>
-                {submitted ? 'Section Complete' : `Section ${sectionIndex + 1} of ${SECTIONS.length} — Label the landmarks`}
-              </p>
+                Overall Progress
+              </span>
+              <span
+                className="text-xs font-bold"
+                style={{
+                  color: 'var(--tgl-lime)',
+                  fontFamily: 'var(--font-space)',
+                  textShadow: progress > 0 ? '0 0 10px rgba(215,255,0,0.45)' : 'none',
+                }}
+              >
+                {Math.round(progress)}%
+              </span>
+            </div>
+            <div
+              className="w-full rounded-full overflow-hidden"
+              style={{ height: 5, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(215,255,0,0.07)' }}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${progress}%`,
+                  background: 'var(--tgl-lime)',
+                  boxShadow: progress > 0 ? '0 0 10px rgba(215,255,0,0.8), 0 0 24px rgba(215,255,0,0.3)' : 'none',
+                  transition: 'width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                }}
+              />
             </div>
           </div>
-          <div
-            className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold"
-            style={{
-              border: '1px solid rgba(215,255,0,0.3)',
-              fontFamily: 'var(--font-space)',
-              color: 'var(--tgl-lime)',
-              background: 'rgba(215,255,0,0.06)',
-            }}
-          >
-            {sectionIndex + 1} <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span> {SECTIONS.length}
-          </div>
-        </header>
 
-        {/* Progress bar */}
-        <div className="shrink-0 px-6 pt-3 pb-1">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-montserrat)' }}>
-              Overall Progress
-            </span>
-            <span className="text-xs font-bold" style={{ color: 'var(--tgl-lime)', fontFamily: 'var(--font-space)' }}>
-              {Math.round(progress)}%
-            </span>
-          </div>
-          <div
-            className="w-full rounded-full overflow-hidden"
-            style={{ height: 6, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(215,255,0,0.1)' }}
-          >
+          {/* ── Main content ── */}
+          <div className="flex flex-1 min-h-0" style={{ padding: 20, gap: 20 }}>
+
+            {/* Map container */}
             <div
-              className="h-full rounded-full"
               style={{
-                width: `${progress}%`,
-                background: 'var(--tgl-lime)',
-                boxShadow: progress > 0 ? '0 0 8px rgba(215,255,0,0.6)' : 'none',
-                transition: 'width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                width: quizActive ? MAP_QUIZ_WIDTH : MAP_NORMAL_WIDTH,
+                flexShrink: 0,
+                transition: 'width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                borderRadius: 16,
+                overflow: 'hidden',
+                position: 'relative',
+                border: '1px solid rgba(215,255,0,0.1)',
+                boxShadow: '0 0 60px rgba(215,255,0,0.05), 0 0 120px rgba(215,255,0,0.03), inset 0 0 0 1px rgba(215,255,0,0.04)',
+                minHeight: 460,
               }}
-            />
-          </div>
-        </div>
-
-        {/* Main content */}
-        <div
-          className="flex flex-1 min-h-0"
-          style={{ padding: 20, gap: 20 }}
-        >
-
-          {/* Map container — animates width */}
-          <div
-            style={{
-              width: quizActive ? MAP_QUIZ_WIDTH : MAP_NORMAL_WIDTH,
-              flexShrink: 0,
-              transition: 'width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              borderRadius: '0.75rem',
-              overflow: 'hidden',
-              position: 'relative',
-              border: '1px solid rgba(215,255,0,0.15)',
-              boxShadow: '0 0 40px rgba(215,255,0,0.05), inset 0 0 0 1px rgba(215,255,0,0.05)',
-              minHeight: 460,
-            }}
-          >
-            <ZoomedMap
-              bounds={activeBounds}
-              dropZones={dropZones}
-              submitted={submitted}
-              onRemove={handleRemove}
-              onPinClick={handlePinClick}
-              quizPinIds={quizPinIds}
-              quizPhase={quizPhase}
-              activePinTarget={activePinTarget ?? undefined}
-              hiddenPinId={activePinQuizId}
-              completedQuizPinIds={completedQuizPinIds}
-              blinkingPinId={starBlinking ? (sectionQuizPinIds.find((id) => !completedQuizPinIds.has(id)) ?? null) : null}
-              selectedLabelId={selectedLabelId}
-              onLabelPlace={handleLabelPlace}
-              onDeselectLabel={handleDeselectLabel}
-            />
-
-            {/* Masterplan PNG — mounts during 'transitioning' so opacity transition fires correctly */}
-            {activePinQuiz && (quizPhase === 'transitioning' || quizPhase === 'active') && (
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: '#000',
-                  zIndex: 1500,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: quizPhase === 'active' ? 1 : 0,
-                  transition: 'opacity 0.8s ease',
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={activePinQuiz.masterPlanImage}
-                  alt="Compound masterplan"
-                  style={{
-                    maxWidth: '90%',
-                    maxHeight: '90%',
-                    objectFit: 'contain',
-                    animation: quizPhase === 'active'
-                      ? 'masterplan-entrance 1s cubic-bezier(0.16, 1, 0.3, 1) forwards'
-                      : 'none',
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Section transition overlay */}
-            {transitioning && (
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'rgba(0,0,0,0.5)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: 2000,
-                  backdropFilter: 'blur(2px)',
-                }}
-              >
-                <div style={{ textAlign: 'center' }}>
-                  <div
-                    className="text-sm font-bold mb-1"
-                    style={{ color: 'var(--tgl-lime)', fontFamily: 'var(--font-space)' }}
-                  >
-                    Flying to {SECTIONS[activeBoundsIndex].label}…
-                  </div>
-                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontFamily: 'var(--font-montserrat)' }}>
-                    Zooming in
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar — animates width */}
-          <aside
-            style={{
-              width: quizActive ? SIDEBAR_QUIZ_WIDTH : SIDEBAR_NORMAL_WIDTH,
-              flexShrink: 0,
-              transition: 'width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-            }}
-          >
-            {quizPhase === 'active' && activePinQuiz ? (
-              /* Active quiz */
-              <PinQuizPanel
-                quiz={activePinQuiz}
-                onSubmit={handleQuizSubmit}
-                submitting={quizSubmitting}
+            >
+              <ZoomedMap
+                bounds={activeBounds}
+                dropZones={dropZones}
+                submitted={submitted}
+                onRemove={handleRemove}
+                onPinClick={handlePinClick}
+                quizPinIds={quizPinIds}
+                quizPhase={quizPhase}
+                activePinTarget={activePinTarget ?? undefined}
+                hiddenPinId={activePinQuizId}
+                completedQuizPinIds={completedQuizPinIds}
+                blinkingPinId={starBlinking ? (sectionQuizPinIds.find((id) => !completedQuizPinIds.has(id)) ?? null) : null}
+                selectedLabelId={selectedLabelId}
+                onLabelPlace={handleLabelPlace}
+                onDeselectLabel={handleDeselectLabel}
               />
-            ) : quizPhase === 'zooming' || quizPhase === 'transitioning' ? (
-              /* Entering compound placeholder */
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+
+              {/* Masterplan PNG */}
+              {activePinQuiz && (quizPhase === 'transitioning' || quizPhase === 'active') && (
                 <div
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    border: '2px solid rgba(215,255,0,0.3)',
-                    borderTopColor: 'var(--tgl-lime)',
-                    animation: 'spin 1s linear infinite',
-                  }}
-                />
-                <p style={{ fontSize: 12, color: 'rgba(215,255,0,0.5)', fontFamily: 'var(--font-space)', textAlign: 'center', lineHeight: 1.6 }}>
-                  Entering project…
-                </p>
-              </div>
-            ) : dropZones.length === 0 ? (
-              /* No landmarks */
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">
-                <div style={{ fontSize: 28 }}>📍</div>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-montserrat)', lineHeight: 1.6 }}>
-                  Landmark content for {section.label} coming soon.
-                </p>
-                <button
-                  onClick={handleContinue}
-                  disabled={saving || transitioning}
-                  className="w-full py-2.5 rounded-lg text-sm font-bold transition-all duration-150 active:scale-95"
-                  style={{
-                    background: saving || transitioning ? 'rgba(215,255,0,0.08)' : 'var(--tgl-lime)',
-                    color: saving || transitioning ? 'rgba(215,255,0,0.4)' : '#000',
-                    boxShadow: saving || transitioning ? 'none' : 'var(--glow-lime-sm)',
-                    fontFamily: 'var(--font-space)',
-                    cursor: saving || transitioning ? 'not-allowed' : 'pointer',
+                    position: 'absolute',
+                    inset: 0,
+                    background: '#000',
+                    zIndex: 1500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: quizPhase === 'active' ? 1 : 0,
+                    transition: 'opacity 0.8s ease',
                   }}
                 >
-                  {saving ? 'Saving…' : sectionIndex < SECTIONS.length - 1 ? 'Next Section →' : 'To Quiz →'}
-                </button>
-              </div>
-            ) : submitted ? (
-              /* Results */
-              <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
-                <div
-                  className="text-4xl font-black"
-                  style={{
-                    fontFamily: 'var(--font-space)',
-                    color: correctCount === dropZones.length ? 'var(--tgl-lime)' : '#ef4444',
-                    lineHeight: 1,
-                  }}
-                >
-                  {correctCount}/{dropZones.length}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={activePinQuiz.masterPlanImage}
+                    alt="Compound masterplan"
+                    style={{
+                      maxWidth: '90%',
+                      maxHeight: '90%',
+                      objectFit: 'contain',
+                      animation: quizPhase === 'active'
+                        ? 'masterplan-entrance 1s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+                        : 'none',
+                    }}
+                  />
                 </div>
-                <p className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                  {correctCount === dropZones.length ? 'Perfect!' : `${dropZones.length - correctCount} wrong`}
-                </p>
-                <button
-                  onClick={handleContinue}
-                  disabled={saving || transitioning}
-                  className="w-full py-2.5 rounded-lg text-sm font-bold transition-all duration-150 active:scale-95"
+              )}
+
+              {/* Section transition overlay */}
+              {transitioning && (
+                <div
                   style={{
-                    background: saving || transitioning ? 'rgba(215,255,0,0.08)' : 'var(--tgl-lime)',
-                    color: saving || transitioning ? 'rgba(215,255,0,0.4)' : '#000',
-                    boxShadow: saving || transitioning ? 'none' : 'var(--glow-lime-sm)',
-                    fontFamily: 'var(--font-space)',
-                    cursor: saving || transitioning ? 'not-allowed' : 'pointer',
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'rgba(0,0,0,0.6)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2000,
+                    backdropFilter: 'blur(4px)',
                   }}
                 >
-                  {saving ? 'Saving…' : sectionIndex < SECTIONS.length - 1 ? 'Next Section →' : 'To Quiz →'}
-                </button>
-              </div>
-            ) : (
-              /* Drag labels + submit */
-              <>
-                <p
-                  className="text-xs font-bold uppercase tracking-widest mb-1 shrink-0"
-                  style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)' }}
-                >
-                  Landmarks
-                </p>
-                <div className="flex flex-col gap-2 flex-1">
-                  {dropZones.map((zone, i) => (
-                    <DraggableAnswer
-                      key={`ans-${i}`}
-                      id={`ans-${i}`}
-                      label={zone.label}
-                      isPlaced={placedLabels.includes(zone.label)}
-                      isSelected={selectedLabelId === `ans-${i}`}
-                      onSelect={handleLabelSelect}
+                  <div style={{ textAlign: 'center' }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
+                        border: '2px solid rgba(215,255,0,0.15)',
+                        borderTopColor: 'var(--tgl-lime)',
+                        animation: 'spin 0.9s linear infinite',
+                        margin: '0 auto 10px',
+                        boxShadow: '0 0 14px rgba(215,255,0,0.2)',
+                      }}
                     />
-                  ))}
+                    <div
+                      style={{
+                        color: 'var(--tgl-lime)',
+                        fontFamily: 'var(--font-space)',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        letterSpacing: '-0.01em',
+                        textShadow: '0 0 16px rgba(215,255,0,0.4)',
+                      }}
+                    >
+                      Flying to {SECTIONS[activeBoundsIndex].label}…
+                    </div>
+                    <div
+                      style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: 'var(--font-montserrat)', marginTop: 3 }}
+                    >
+                      Zooming in
+                    </div>
+                  </div>
                 </div>
-                <button
-                  onClick={() => {
-                    if (!allPlaced) return;
-                    if (!allSectionQuizDone) {
-                      setStarBlinking(true);
-                      setShowQuizPrompt(true);
-                      return;
-                    }
-                    setSubmitted(true);
-                  }}
-                  className="mt-3 w-full py-3 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 shrink-0"
-                  style={{
-                    fontFamily: 'var(--font-space)',
-                    background: allPlaced ? 'var(--tgl-lime)' : 'rgba(215,255,0,0.06)',
-                    color: allPlaced ? '#000' : 'rgba(215,255,0,0.3)',
-                    border: allPlaced ? 'none' : '1px solid rgba(215,255,0,0.15)',
-                    boxShadow: allPlaced ? 'var(--glow-lime)' : 'none',
-                    cursor: allPlaced ? 'pointer' : 'not-allowed',
-                  }}
-                >
-                  {allPlaced ? '✓ Submit' : `${placedLabels.length}/${dropZones.length} Placed`}
-                </button>
-                {isAdmin && (
+              )}
+            </div>
+
+            {/* ── Sidebar ── */}
+            <aside
+              style={{
+                width: quizActive ? SIDEBAR_QUIZ_WIDTH : SIDEBAR_NORMAL_WIDTH,
+                flexShrink: 0,
+                transition: 'width 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                ...(quizActive ? {} : {
+                  background: 'linear-gradient(180deg, #0d0d0d 0%, #090909 100%)',
+                  border: '1px solid rgba(215,255,0,0.1)',
+                  borderTop: '2px solid rgba(215,255,0,0.45)',
+                  borderRadius: 14,
+                  padding: '14px 12px 12px',
+                  boxShadow: '0 0 40px rgba(215,255,0,0.04), inset 0 1px 0 rgba(215,255,0,0.06)',
+                }),
+              }}
+            >
+              {quizPhase === 'active' && activePinQuiz ? (
+                /* Active quiz */
+                <PinQuizPanel
+                  quiz={activePinQuiz}
+                  onSubmit={handleQuizSubmit}
+                  submitting={quizSubmitting}
+                />
+              ) : quizPhase === 'zooming' || quizPhase === 'transitioning' ? (
+                /* Entering compound placeholder */
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      border: '2px solid rgba(215,255,0,0.15)',
+                      borderTopColor: 'var(--tgl-lime)',
+                      animation: 'spin 1s linear infinite',
+                      boxShadow: '0 0 14px rgba(215,255,0,0.2)',
+                    }}
+                  />
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: 'rgba(215,255,0,0.5)',
+                      fontFamily: 'var(--font-space)',
+                      textAlign: 'center',
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    Entering project…
+                  </p>
+                </div>
+              ) : dropZones.length === 0 ? (
+                /* No landmarks */
+                <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">
+                  <div style={{ fontSize: 28 }}>📍</div>
+                  <p
+                    className="text-xs"
+                    style={{
+                      color: 'rgba(255,255,255,0.4)',
+                      fontFamily: 'var(--font-montserrat)',
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    Landmark content for {section.label} coming soon.
+                  </p>
                   <button
-                    onClick={handleSkip}
+                    onClick={handleContinue}
                     disabled={saving || transitioning}
-                    className="w-full py-2 rounded-lg text-xs font-bold transition-all duration-150 active:scale-95"
+                    className="w-full py-2.5 rounded-xl text-sm font-bold active:scale-95"
+                    style={{
+                      background: saving || transitioning ? 'rgba(215,255,0,0.08)' : 'var(--tgl-lime)',
+                      color: saving || transitioning ? 'rgba(215,255,0,0.4)' : '#000',
+                      boxShadow: saving || transitioning ? 'none' : '0 0 18px rgba(215,255,0,0.4)',
+                      fontFamily: 'var(--font-space)',
+                      cursor: saving || transitioning ? 'not-allowed' : 'pointer',
+                      border: 'none',
+                      transition: 'box-shadow 150ms ease',
+                    }}
+                  >
+                    {saving ? 'Saving…' : sectionIndex < SECTIONS.length - 1 ? 'Next Section →' : 'To Quiz →'}
+                  </button>
+                </div>
+              ) : submitted ? (
+                /* Results */
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center">
+                  <div
+                    style={{
+                      fontSize: 52,
+                      fontWeight: 900,
+                      fontFamily: 'var(--font-space)',
+                      color: correctCount === dropZones.length ? 'var(--tgl-lime)' : '#ef4444',
+                      lineHeight: 1,
+                      letterSpacing: '-0.04em',
+                      textShadow: correctCount === dropZones.length
+                        ? '0 0 30px rgba(215,255,0,0.55), 0 0 70px rgba(215,255,0,0.2)'
+                        : '0 0 24px rgba(239,68,68,0.45)',
+                      animation: 'score-entrance 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+                    }}
+                  >
+                    {correctCount}/{dropZones.length}
+                  </div>
+                  <p
+                    style={{
+                      fontSize: 13,
+                      color: 'rgba(255,255,255,0.5)',
+                      fontFamily: 'var(--font-montserrat)',
+                    }}
+                  >
+                    {correctCount === dropZones.length ? 'Perfect!' : `${dropZones.length - correctCount} wrong`}
+                  </p>
+                  <button
+                    onClick={handleContinue}
+                    disabled={saving || transitioning}
+                    className="w-full py-2.5 rounded-xl text-sm font-bold active:scale-95"
+                    style={{
+                      background: saving || transitioning ? 'rgba(215,255,0,0.08)' : 'var(--tgl-lime)',
+                      color: saving || transitioning ? 'rgba(215,255,0,0.4)' : '#000',
+                      boxShadow: saving || transitioning ? 'none' : '0 0 18px rgba(215,255,0,0.4), 0 0 50px rgba(215,255,0,0.12)',
+                      fontFamily: 'var(--font-space)',
+                      cursor: saving || transitioning ? 'not-allowed' : 'pointer',
+                      border: 'none',
+                      transition: 'box-shadow 150ms ease',
+                    }}
+                    onMouseEnter={e => {
+                      if (!saving && !transitioning)
+                        (e.currentTarget as HTMLElement).style.boxShadow = '0 0 28px rgba(215,255,0,0.6), 0 0 70px rgba(215,255,0,0.18)';
+                    }}
+                    onMouseLeave={e => {
+                      if (!saving && !transitioning)
+                        (e.currentTarget as HTMLElement).style.boxShadow = '0 0 18px rgba(215,255,0,0.4), 0 0 50px rgba(215,255,0,0.12)';
+                    }}
+                  >
+                    {saving ? 'Saving…' : sectionIndex < SECTIONS.length - 1 ? 'Next Section →' : 'To Quiz →'}
+                  </button>
+                </div>
+              ) : (
+                /* ── Drag labels + submit ── */
+                <>
+                  {/* Panel label + count badge */}
+                  <div className="flex items-center justify-between shrink-0 mb-0.5">
+                    <p
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        fontFamily: 'var(--font-space)',
+                        color: 'rgba(215,255,0,0.5)',
+                        letterSpacing: '0.14em',
+                        textTransform: 'uppercase',
+                        margin: 0,
+                      }}
+                    >
+                      Landmarks
+                    </p>
+                    {remaining > 0 && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          fontFamily: 'var(--font-space)',
+                          color: 'rgba(255,255,255,0.35)',
+                          background: 'rgba(255,255,255,0.06)',
+                          border: '1px solid rgba(255,255,255,0.07)',
+                          borderRadius: 99,
+                          padding: '2px 8px',
+                        }}
+                      >
+                        {remaining} left
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Shuffled answer tokens */}
+                  <div className="flex flex-col gap-2 flex-1">
+                    {displayAnswers.map((ans, i) => (
+                      <div
+                        key={`${sectionIndex}-${ans.id}`}
+                        style={{
+                          animation: 'token-appear 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+                          animationDelay: `${i * 50}ms`,
+                        }}
+                      >
+                        <DraggableAnswer
+                          id={ans.id}
+                          label={ans.label}
+                          isPlaced={placedLabels.includes(ans.label)}
+                          isSelected={selectedLabelId === ans.id}
+                          onSelect={handleLabelSelect}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Submit */}
+                  <button
+                    onClick={() => {
+                      if (!allPlaced) return;
+                      if (!allSectionQuizDone) {
+                        setStarBlinking(true);
+                        setShowQuizPrompt(true);
+                        return;
+                      }
+                      setSubmitted(true);
+                    }}
+                    className="mt-3 w-full py-3 rounded-xl text-sm font-bold active:scale-95 shrink-0"
+                    style={{
+                      fontFamily: 'var(--font-space)',
+                      background: allPlaced ? 'var(--tgl-lime)' : 'rgba(215,255,0,0.05)',
+                      color: allPlaced ? '#000' : 'rgba(215,255,0,0.22)',
+                      border: allPlaced ? 'none' : '1px solid rgba(215,255,0,0.1)',
+                      boxShadow: allPlaced ? '0 0 18px rgba(215,255,0,0.4), 0 0 50px rgba(215,255,0,0.12)' : 'none',
+                      cursor: allPlaced ? 'pointer' : 'not-allowed',
+                      transition: 'box-shadow 150ms ease, transform 150ms ease',
+                    }}
+                    onMouseEnter={e => {
+                      if (allPlaced) {
+                        (e.currentTarget as HTMLElement).style.boxShadow = '0 0 28px rgba(215,255,0,0.6), 0 0 70px rgba(215,255,0,0.18)';
+                        (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (allPlaced) {
+                        (e.currentTarget as HTMLElement).style.boxShadow = '0 0 18px rgba(215,255,0,0.4), 0 0 50px rgba(215,255,0,0.12)';
+                        (e.currentTarget as HTMLElement).style.transform = '';
+                      }
+                    }}
+                  >
+                    {allPlaced ? '✓ Submit' : `${placedLabels.length} / ${dropZones.length} Placed`}
+                  </button>
+
+                  {/* Skip — visible to all users */}
+                  <button
+                    onClick={() => setShowSkipModal(true)}
+                    disabled={saving || transitioning}
+                    className="w-full py-2 rounded-xl text-xs font-bold shrink-0"
                     style={{
                       fontFamily: 'var(--font-space)',
                       background: 'transparent',
-                      color: 'rgba(251,146,60,0.7)',
-                      border: '1px dashed rgba(251,146,60,0.35)',
+                      color: 'rgba(239,68,68,0.65)',
+                      border: '1px dashed rgba(239,68,68,0.22)',
                       cursor: saving || transitioning ? 'not-allowed' : 'pointer',
+                      opacity: 0.5,
+                      marginTop: 4,
+                      transition: 'opacity 150ms ease, border-color 150ms ease',
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLElement).style.opacity = '1';
+                      (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.5)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.opacity = '0.5';
+                      (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.22)';
                     }}
                   >
-                    ⚡ Skip Section →
+                    Skip Section →
                   </button>
-                )}
-                {showQuizPrompt && !allSectionQuizDone && (
-                  <div
-                    style={{
-                      marginTop: 8,
-                      padding: '8px 12px',
-                      borderRadius: 8,
-                      background: 'rgba(215,255,0,0.06)',
-                      border: '1px solid rgba(215,255,0,0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                    }}
-                  >
-                    <span style={{ color: 'var(--tgl-lime)', fontSize: 14, flexShrink: 0, animation: 'star-blink 0.8s ease-in-out infinite' }}>✦</span>
-                    <p style={{ color: 'rgba(215,255,0,0.7)', fontSize: 11, fontFamily: 'var(--font-space)', margin: 0, lineHeight: 1.5 }}>
-                      Click the ✦ star on the map to complete the project quiz first
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-          </aside>
-        </div>
-      </div>
 
-      <DragOverlay dropAnimation={null}>
-        {activeAnswer ? (
-          <DraggableAnswer
-            id={activeAnswer.id}
-            label={activeAnswer.label}
-            isPlaced={false}
-            isDragOverlay
-          />
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+                  {/* Quiz prompt */}
+                  {showQuizPrompt && !allSectionQuizDone && (
+                    <div
+                      style={{
+                        marginTop: 8,
+                        padding: '8px 12px',
+                        borderRadius: 10,
+                        background: 'rgba(215,255,0,0.05)',
+                        border: '1px solid rgba(215,255,0,0.18)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: 'var(--tgl-lime)',
+                          fontSize: 14,
+                          flexShrink: 0,
+                          animation: 'star-blink 0.8s ease-in-out infinite',
+                        }}
+                      >
+                        ✦
+                      </span>
+                      <p
+                        style={{
+                          color: 'rgba(215,255,0,0.65)',
+                          fontSize: 11,
+                          fontFamily: 'var(--font-space)',
+                          margin: 0,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        Click the ✦ star on the map to complete the project quiz first
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </aside>
+          </div>
+        </div>
+
+        <DragOverlay dropAnimation={null}>
+          {activeAnswer ? (
+            <DraggableAnswer
+              id={activeAnswer.id}
+              label={activeAnswer.label}
+              isPlaced={false}
+              isDragOverlay
+            />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+
+      {/* ── Leave modal ── */}
+      {showLeaveModal && (
+        <ConfirmModal
+          title="Leave Assessment?"
+          body="Your progress will not be saved. Any answers you've placed will be lost permanently."
+          confirmLabel="Leave"
+          cancelLabel="Stay"
+          variant="red"
+          onConfirm={() => router.push('/dashboard')}
+          onCancel={() => setShowLeaveModal(false)}
+        />
+      )}
+
+      {/* ── Skip modal ── */}
+      {showSkipModal && (
+        <ConfirmModal
+          title="Skip this section?"
+          body="Any pins you haven't placed will be marked as incorrect (0 pts). Placed pins keep their answer. This cannot be undone."
+          confirmLabel="Skip Anyway"
+          cancelLabel="Go Back"
+          variant="red"
+          onConfirm={handleSkipConfirm}
+          onCancel={() => setShowSkipModal(false)}
+        />
+      )}
+    </>
   );
 }

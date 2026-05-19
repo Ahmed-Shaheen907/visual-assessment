@@ -162,10 +162,18 @@ function getBestWorst(scores: SectionScore[]) {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function ScoreBar({ pct }: { pct: number }) {
-  const color = pct >= PASS_THRESHOLD ? 'var(--tgl-lime)' : '#ef4444';
+  const passing = pct >= PASS_THRESHOLD;
+  const color   = passing ? 'var(--tgl-lime)' : '#ef4444';
   return (
-    <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden', width: 80 }}>
-      <div style={{ width: `${Math.round(pct * 100)}%`, height: '100%', background: color, borderRadius: 99, transition: 'width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' }} />
+    <div style={{ height: 5, background: 'rgba(255,255,255,0.07)', borderRadius: 99, overflow: 'hidden', width: 84, border: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{
+        width: `${Math.round(pct * 100)}%`,
+        height: '100%',
+        background: color,
+        borderRadius: 99,
+        boxShadow: passing ? '0 0 8px rgba(215,255,0,0.5)' : '0 0 8px rgba(239,68,68,0.4)',
+        transition: 'width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }} />
     </div>
   );
 }
@@ -242,7 +250,20 @@ function SummaryPage({ scores, overall, best, worst }: {
             {scores.reduce((s, x) => s + x.correct, 0)} / {scores.reduce((s, x) => s + x.total, 0)} correct
           </span>
         </div>
-        <div className="text-6xl font-black mb-2" style={{ fontFamily: 'var(--font-space)', color: overall >= PASS_THRESHOLD ? 'var(--tgl-lime)' : '#f87171', letterSpacing: '-0.04em', lineHeight: 1 }}>
+        <div
+          className="font-black mb-2"
+          style={{
+            fontFamily: 'var(--font-space)',
+            fontSize: 72,
+            color: overall >= PASS_THRESHOLD ? 'var(--tgl-lime)' : '#f87171',
+            letterSpacing: '-0.04em',
+            lineHeight: 1,
+            textShadow: overall >= PASS_THRESHOLD
+              ? '0 0 40px rgba(215,255,0,0.5), 0 0 80px rgba(215,255,0,0.2)'
+              : '0 0 30px rgba(248,113,113,0.4)',
+            animation: 'score-entrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+          }}
+        >
           {Math.round(overall * 100)}%
         </div>
         <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)', fontFamily: 'var(--font-montserrat)' }}>
@@ -384,39 +405,66 @@ function PageNav({ current, total, onPrev, onNext }: { current: number; total: n
   return (
     <div
       className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-6 py-4"
-      style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(215,255,0,0.1)', zIndex: 40 }}
+      style={{
+        background: 'rgba(0,0,0,0.92)',
+        backdropFilter: 'blur(20px)',
+        borderTop: '1px solid rgba(215,255,0,0.08)',
+        boxShadow: '0 -1px 0 rgba(215,255,0,0.04), 0 -8px 40px rgba(0,0,0,0.5)',
+        zIndex: 40,
+      }}
     >
       <button
         onClick={onPrev}
         disabled={current === 0}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-150"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold"
         style={{
-          background: current === 0 ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)',
-          color: current === 0 ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.75)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: current === 0 ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.07)',
+          color: current === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.7)',
+          border: `1px solid ${current === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.1)'}`,
           fontFamily: 'var(--font-space)',
           cursor: current === 0 ? 'not-allowed' : 'pointer',
+          letterSpacing: '-0.01em',
+          transition: 'all 150ms ease',
         }}
-        onMouseEnter={e => { if (current !== 0) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.14)'; }}
-        onMouseLeave={e => { if (current !== 0) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
+        onMouseEnter={e => { if (current !== 0) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'; }}
+        onMouseLeave={e => { if (current !== 0) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; }}
       >
         ← Previous
       </button>
-      <span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-space)' }}>
-        {current + 1} / {total}
-      </span>
+
+      {/* Dot indicator */}
+      <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+        {Array.from({ length: Math.min(total, 10) }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              width: i === current ? 16 : 5,
+              height: 5,
+              borderRadius: 99,
+              background: i === current ? 'var(--tgl-lime)' : i < current ? 'rgba(215,255,0,0.3)' : 'rgba(255,255,255,0.1)',
+              boxShadow: i === current ? '0 0 8px rgba(215,255,0,0.6)' : 'none',
+              transition: 'all 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+
       <button
         onClick={onNext}
         disabled={current === total - 1}
-        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold"
         style={{
-          background: current === total - 1 ? 'rgba(215,255,0,0.04)' : 'var(--tgl-lime)',
-          color: current === total - 1 ? 'rgba(215,255,0,0.25)' : '#000',
+          background: current === total - 1 ? 'rgba(215,255,0,0.05)' : 'var(--tgl-lime)',
+          color: current === total - 1 ? 'rgba(215,255,0,0.22)' : '#000',
           border: current === total - 1 ? '1px solid rgba(215,255,0,0.1)' : 'none',
           fontFamily: 'var(--font-space)',
           cursor: current === total - 1 ? 'not-allowed' : 'pointer',
-          boxShadow: current === total - 1 ? 'none' : '0 0 16px rgba(215,255,0,0.25)',
+          boxShadow: current === total - 1 ? 'none' : '0 0 16px rgba(215,255,0,0.35), 0 0 40px rgba(215,255,0,0.1)',
+          letterSpacing: '-0.01em',
+          transition: 'box-shadow 150ms ease',
         }}
+        onMouseEnter={e => { if (current !== total - 1) (e.currentTarget as HTMLElement).style.boxShadow = '0 0 24px rgba(215,255,0,0.55), 0 0 60px rgba(215,255,0,0.16)'; }}
+        onMouseLeave={e => { if (current !== total - 1) (e.currentTarget as HTMLElement).style.boxShadow = '0 0 16px rgba(215,255,0,0.35), 0 0 40px rgba(215,255,0,0.1)'; }}
       >
         Next →
       </button>
@@ -451,7 +499,16 @@ export default function ResultsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--tgl-black)' }}>
-        <div className="text-sm" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-montserrat)' }}>Loading results…</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%',
+            border: '2px solid rgba(215,255,0,0.1)',
+            borderTopColor: 'var(--tgl-lime)',
+            animation: 'spin 0.8s linear infinite',
+            boxShadow: '0 0 14px rgba(215,255,0,0.2)',
+          }} />
+          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, fontFamily: 'var(--font-montserrat)' }}>Loading results…</p>
+        </div>
       </div>
     );
   }
@@ -504,7 +561,18 @@ export default function ResultsPage() {
   return (
     <main className="min-h-screen flex flex-col" style={{ background: 'var(--tgl-black)', paddingBottom: 80 }}>
       {/* Header */}
-      <header className="px-6 py-4 flex items-center justify-between shrink-0" style={{ borderBottom: '1px solid rgba(215,255,0,0.12)' }}>
+      <header
+        className="px-6 py-4 flex items-center justify-between shrink-0"
+        style={{
+          borderBottom: '1px solid rgba(215,255,0,0.1)',
+          boxShadow: '0 1px 0 rgba(215,255,0,0.05), 0 4px 24px rgba(0,0,0,0.4)',
+          background: 'rgba(0,0,0,0.96)',
+          backdropFilter: 'blur(20px)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 30,
+        }}
+      >
         <div className="flex items-center gap-3">
           <Image src="/tgl-logo.png" alt="TGL" width={36} height={36} className="object-contain" />
           <div>
@@ -554,23 +622,35 @@ export default function ResultsPage() {
       </header>
 
       {/* Scrollable tab bar */}
-      <div className="px-6 pt-4 pb-0 shrink-0">
-        <div className="flex gap-1.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+      <div className="px-6 pt-4 pb-0 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className="flex gap-1.5 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
           {pages.map((p, i) => (
             <button
               key={p.key}
               onClick={() => setCurrentPage(i)}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold shrink-0"
+              className="px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0"
               style={{
-                background: i === currentPage ? 'var(--tgl-lime)' : 'rgba(255,255,255,0.06)',
-                color: i === currentPage ? '#000' : 'rgba(255,255,255,0.55)',
-                border: i === currentPage ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                background: i === currentPage ? 'var(--tgl-lime)' : 'rgba(255,255,255,0.05)',
+                color: i === currentPage ? '#000' : 'rgba(255,255,255,0.45)',
+                border: i === currentPage ? 'none' : '1px solid rgba(255,255,255,0.07)',
                 fontFamily: 'var(--font-space)',
                 cursor: 'pointer',
+                boxShadow: i === currentPage ? '0 0 12px rgba(215,255,0,0.3)' : 'none',
+                letterSpacing: '-0.01em',
                 transition: 'all 0.15s ease',
               }}
-              onMouseEnter={e => { if (i !== currentPage) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.85)'; } }}
-              onMouseLeave={e => { if (i !== currentPage) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.55)'; } }}
+              onMouseEnter={e => {
+                if (i !== currentPage) {
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)';
+                  (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)';
+                }
+              }}
+              onMouseLeave={e => {
+                if (i !== currentPage) {
+                  (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)';
+                  (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)';
+                }
+              }}
             >
               {p.label}
             </button>

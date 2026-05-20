@@ -132,8 +132,7 @@ export default function QuizQuestion({ question, index, total, onAnswer, answere
           {question.options.map((opt) => (
             <button
               key={opt}
-              onClick={() => !answered && onAnswer(opt)}
-              disabled={!!answered}
+              onClick={() => onAnswer(opt)}
               dir="rtl"
               className="w-full px-5 py-4 rounded-xl font-medium transition-all duration-150"
               style={{
@@ -141,7 +140,7 @@ export default function QuizQuestion({ question, index, total, onAnswer, answere
                 border: answered === opt ? '1px solid rgba(215,255,0,0.5)' : '1px solid rgba(255,255,255,0.1)',
                 color: answered === opt ? 'var(--tgl-lime)' : 'rgba(255,255,255,0.8)',
                 fontFamily: 'var(--font-montserrat)',
-                cursor: answered ? 'default' : 'pointer',
+                cursor: 'pointer',
                 boxShadow: answered === opt ? '0 0 12px rgba(215,255,0,0.1)' : 'none',
                 fontSize: 15,
                 textAlign: 'right',
@@ -160,15 +159,14 @@ export default function QuizQuestion({ question, index, total, onAnswer, answere
           {['true', 'false'].map((opt) => (
             <button
               key={opt}
-              onClick={() => !answered && onAnswer(opt)}
-              disabled={!!answered}
+              onClick={() => onAnswer(opt)}
               className="flex-1 py-5 rounded-xl font-black text-lg uppercase tracking-widest transition-all duration-150 active:scale-95"
               style={{
                 background: answered === opt ? 'rgba(215,255,0,0.12)' : 'rgba(255,255,255,0.04)',
                 border: answered === opt ? '1px solid rgba(215,255,0,0.5)' : '1px solid rgba(255,255,255,0.1)',
                 color: answered === opt ? 'var(--tgl-lime)' : 'rgba(255,255,255,0.7)',
                 fontFamily: 'var(--font-space)',
-                cursor: answered ? 'default' : 'pointer',
+                cursor: 'pointer',
                 letterSpacing: '0.1em',
                 boxShadow: answered === opt ? '0 0 12px rgba(215,255,0,0.1)' : 'none',
               }}

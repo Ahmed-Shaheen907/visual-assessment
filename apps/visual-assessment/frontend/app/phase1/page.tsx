@@ -198,6 +198,12 @@ export default function Phase1Page() {
     setActivePinTarget(null);
   }, [activePinQuiz, activePinQuizId]);
 
+  function handleQuizExit() {
+    setQuizPhase('idle');
+    setActivePinQuizId(null);
+    setActivePinTarget(null);
+  }
+
   function advanceSection(nextIdx: number, zones: DropZone[]) {
     setTransitioning(true);
     setActiveBoundsIndex(nextIdx);
@@ -552,6 +558,7 @@ export default function Phase1Page() {
                   quiz={activePinQuiz}
                   onSubmit={handleQuizSubmit}
                   submitting={quizSubmitting}
+                  onExit={handleQuizExit}
                 />
               ) : quizPhase === 'zooming' || quizPhase === 'transitioning' ? (
                 /* Entering compound placeholder */

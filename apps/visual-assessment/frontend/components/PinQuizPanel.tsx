@@ -2,18 +2,20 @@
 
 import { useState, useCallback, CSSProperties } from 'react';
 import type { PinQuizData } from '@/lib/data/pin-quizzes';
+import ConfirmModal from '@/components/ConfirmModal';
 
 interface PinQuizPanelProps {
   quiz: PinQuizData;
   onSubmit: (answers: Record<string, string>) => void;
   submitting: boolean;
+  onExit?: () => void;
 }
 
 function parseJson<T>(raw: string, fallback: T): T {
   try { return JSON.parse(raw) as T; } catch { return fallback; }
 }
 
-export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPanelProps) {
+export default function PinQuizPanel({ quiz, onSubmit, submitting, onExit }: PinQuizPanelProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [cardStyle, setCardStyle] = useState<CSSProperties>({
@@ -21,6 +23,7 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
     opacity: 1,
   });
   const [advancing, setAdvancing] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const q = quiz.questions[currentIndex];
   const isLast = currentIndex === quiz.questions.length - 1;
@@ -118,18 +121,49 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
 
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 800,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'rgba(215,255,0,0.6)',
-            fontFamily: 'var(--font-space)',
-          }}
-        >
-          Project Quiz
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            onClick={() => setShowExitConfirm(true)}
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 8,
+              color: 'rgba(255,255,255,0.45)',
+              width: 28,
+              height: 28,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: 15,
+              flexShrink: 0,
+              transition: 'background 150ms, color 150ms',
+              fontFamily: 'var(--font-space)',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)';
+              (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.85)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)';
+              (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)';
+            }}
+          >
+            ←
+          </button>
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: 'rgba(215,255,0,0.6)',
+              fontFamily: 'var(--font-space)',
+            }}
+          >
+            Project Quiz
+          </span>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-space)' }}>
             {currentIndex + 1} / {quiz.questions.length}
@@ -400,6 +434,18 @@ export default function PinQuizPanel({ quiz, onSubmit, submitting }: PinQuizPane
         >
           {submitting ? 'Saving…' : isLast ? '✓ Submit Quiz' : 'Continue →'}
         </button>
+      )}
+
+      {showExitConfirm && (
+        <ConfirmModal
+          title="Exit Quiz?"
+          body="All your answers for this quiz will be erased. Your progress won't be saved."
+          confirmLabel="Exit Quiz"
+          cancelLabel="Keep Going"
+          variant="red"
+          onConfirm={() => { setShowExitConfirm(false); onExit?.(); }}
+          onCancel={() => setShowExitConfirm(false)}
+        />
       )}
     </div>
   );

@@ -184,61 +184,36 @@ function DroppablePin({
       <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', background: `radial-gradient(circle, ${pinColor}33 0%, transparent 70%)`, opacity: isOver || placementMode ? 1 : answered ? 0.3 : 0.7, transition: 'opacity 0.2s', pointerEvents: 'none', animation: answered || submitted ? 'none' : 'pin-pulse-ring 2.5s ease-in-out infinite' }} />
       {/* Border ring */}
       <div style={{ position: 'absolute', width: 62, height: 62, borderRadius: '50%', left: '50%', top: '50%', transform: isOver ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%)', border: `2px solid ${pinColor}`, opacity: isOver ? 1 : answered ? 0.5 : 0.65, boxShadow: isOver ? `0 0 16px ${pinColor}88` : answered ? `0 0 10px ${pinColor}44` : 'none', transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s', pointerEvents: 'none' }} />
-      {/* Center circle */}
+      {/* Center circle — turns lime with ✦ when a quiz is available (no offset = exact geo coordinate) */}
       <div
         style={{
           width: 36,
           height: 36,
           borderRadius: '50%',
-          background: answered ? pinColor : baseColor,
+          background: canClick ? 'var(--tgl-lime)' : answered ? pinColor : baseColor,
           border: '2.5px solid rgba(0,0,0,0.5)',
-          boxShadow: `0 2px 12px ${pinColor}88, 0 0 0 1px ${pinColor}44`,
+          boxShadow: canClick
+            ? '0 0 14px rgba(215,255,0,0.8), 0 0 28px rgba(215,255,0,0.4)'
+            : `0 2px 12px ${pinColor}88, 0 0 0 1px ${pinColor}44`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
-          transition: 'background 0.25s, transform 0.15s',
+          transition: 'background 0.25s, transform 0.15s, box-shadow 0.25s',
           transform: isOver ? 'scale(1.15)' : 'scale(1)',
-          animation: answered || submitted ? 'none' : 'pin-pulse 2.5s ease-in-out infinite',
+          animation: isBlinking ? 'star-blink 0.8s ease-in-out infinite' : answered || submitted ? 'none' : 'pin-pulse 2.5s ease-in-out infinite',
         }}
       >
         {submitted ? (
           <span style={{ color: isCorrect ? '#000' : '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'var(--font-space)' }}>{isCorrect ? '✓' : '✗'}</span>
+        ) : canClick ? (
+          <span style={{ color: '#000', fontSize: 13, fontWeight: 900, fontFamily: 'var(--font-space)' }}>✦</span>
         ) : answered ? (
           <span style={{ color: '#000', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space)' }}>●</span>
         ) : (
           <span style={{ color: '#fff', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space)' }}>{index + 1}</span>
         )}
       </div>
-
-      {/* Quiz indicator badge — own pointerEvents so the full badge area is clickable even outside parent bounds */}
-      {canClick && (
-        <div
-          onClick={(e) => { e.stopPropagation(); onPinClick?.(zone.id); }}
-          style={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            width: 22,
-            height: 22,
-            borderRadius: '50%',
-            background: 'var(--tgl-lime)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 11,
-            fontWeight: 900,
-            color: '#000',
-            boxShadow: '0 0 10px rgba(215,255,0,0.8), 0 0 20px rgba(215,255,0,0.3)',
-            pointerEvents: 'all',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-space)',
-            animation: isBlinking ? 'star-blink 0.8s ease-in-out infinite' : 'none',
-          }}
-        >
-          ✦
-        </div>
-      )}
 
       {answered && (
         <div

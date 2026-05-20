@@ -281,6 +281,8 @@ export default function Map({
         deltaX: e.deltaX,
         deltaMode: e.deltaMode,
         ctrlKey: e.ctrlKey,
+        clientX: e.clientX,
+        clientY: e.clientY,
         bubbles: true,
         cancelable: true,
       })

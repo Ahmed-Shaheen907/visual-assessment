@@ -4,20 +4,38 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import QuizQuestion from '@/components/QuizQuestion';
-import { QUESTIONS } from '@/lib/data/questions';
+import type { Question } from '@/lib/data/questions';
+import { QUESTIONS_BY_SECTION } from '@/lib/data/questions';
 import { saveAnswers, markSessionComplete } from '@/lib/supabase-helpers';
+
+const QUIZ_SECTIONS = ['marina', 'new_alamein', 'sidi_abdel_rahman', 'el_dabaa', 'ras_al_hekma'];
+const QUESTIONS_PER_SECTION = 5;
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 export default function QuizPage() {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<(string | null)[]>(Array(QUESTIONS.length).fill(null));
+  const [quizQuestions] = useState<Question[]>(() =>
+    QUIZ_SECTIONS.flatMap((sec) =>
+      shuffleArray(QUESTIONS_BY_SECTION[sec] ?? []).slice(0, QUESTIONS_PER_SECTION)
+    )
+  );
+  const [answers, setAnswers] = useState<(string | null)[]>(() => Array(quizQuestions.length).fill(null));
   const [finishing, setFinishing] = useState(false);
   const isAdmin = typeof window !== 'undefined' && localStorage.getItem('va_user_email') === 'admin@gmail.com';
 
-  const question = QUESTIONS[currentIndex];
+  const question = quizQuestions[currentIndex];
   const answered = answers[currentIndex];
-  const progress = ((currentIndex) / QUESTIONS.length) * 100;
-  const isLast = currentIndex === QUESTIONS.length - 1;
+  const progress = ((currentIndex) / quizQuestions.length) * 100;
+  const isLast = currentIndex === quizQuestions.length - 1;
 
   function handleAnswer(answer: string) {
     setAnswers((prev) => {
@@ -33,7 +51,7 @@ export default function QuizPage() {
     if (sessionId) {
       await saveAnswers(
         sessionId,
-        QUESTIONS.map((q, i) => ({
+        quizQuestions.map((q, i) => ({
           phase: 'phase2',
           question_id: q.id,
           answer_given: answers[i] ?? null,
@@ -55,7 +73,7 @@ export default function QuizPage() {
       if (sessionId) {
         await saveAnswers(
           sessionId,
-          QUESTIONS.map((q, i) => ({
+          quizQuestions.map((q, i) => ({
             phase: 'phase2',
             question_id: q.id,
             answer_given: answers[i],
@@ -70,7 +88,7 @@ export default function QuizPage() {
     }
   }
 
-  if (QUESTIONS.length === 0) {
+  if (quizQuestions.length === 0) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center p-8" style={{ background: 'var(--tgl-black)' }}>
         <div className="text-center max-w-md">
@@ -124,7 +142,7 @@ export default function QuizPage() {
           className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold"
           style={{ border: '1px solid rgba(215,255,0,0.3)', fontFamily: 'var(--font-space)', color: 'var(--tgl-lime)', background: 'rgba(215,255,0,0.06)' }}
         >
-          {currentIndex + 1} <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span> {QUESTIONS.length}
+          {currentIndex + 1} <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span> {quizQuestions.length}
         </div>
       </header>
 
@@ -151,7 +169,7 @@ export default function QuizPage() {
         <QuizQuestion
           question={question}
           index={currentIndex}
-          total={QUESTIONS.length}
+          total={quizQuestions.length}
           onAnswer={handleAnswer}
           answered={answered}
         />

@@ -35,7 +35,8 @@ function FreeTextAnswer({ answered, onAnswer }: { answered: string | null; onAns
       <textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Type your answer here…"
+        placeholder="اكتب إجابتك هنا…"
+        dir="rtl"
         rows={3}
         className="w-full px-5 py-4 rounded-xl text-sm outline-none resize-none transition-all duration-200"
         style={{
@@ -43,6 +44,7 @@ function FreeTextAnswer({ answered, onAnswer }: { answered: string | null; onAns
           border: '1px solid rgba(255,255,255,0.1)',
           color: 'var(--tgl-white)',
           fontFamily: 'var(--font-montserrat)',
+          textAlign: 'right',
         }}
         onFocus={(e) => { e.target.style.border = '1px solid rgba(215,255,0,0.5)'; e.target.style.boxShadow = '0 0 0 3px rgba(215,255,0,0.08)'; }}
         onBlur={(e) => { e.target.style.border = '1px solid rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
@@ -86,14 +88,15 @@ export default function QuizQuestion({ question, index, total, onAnswer, answere
             fontFamily: 'var(--font-space)',
           }}
         >
-          {question.type === 'mcq' ? 'Multiple Choice' : question.type === 'truefalse' ? 'True / False' : 'Open Answer'}
+          {question.type === 'mcq' ? 'Multiple Choice' : question.type === 'truefalse' ? 'صح / غلط' : 'Open Answer'}
         </span>
       </div>
 
       {/* Question text */}
       <h2
+        dir="rtl"
         className="text-2xl font-bold mb-8 leading-snug"
-        style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-white)', letterSpacing: '-0.02em' }}
+        style={{ fontFamily: 'var(--font-space)', color: 'var(--tgl-white)', letterSpacing: '-0.02em', textAlign: 'right' }}
       >
         {question.question}
       </h2>
@@ -106,7 +109,8 @@ export default function QuizQuestion({ question, index, total, onAnswer, answere
               key={opt}
               onClick={() => !answered && onAnswer(opt)}
               disabled={!!answered}
-              className="w-full text-left px-5 py-4 rounded-xl font-medium transition-all duration-150"
+              dir="rtl"
+              className="w-full px-5 py-4 rounded-xl font-medium transition-all duration-150"
               style={{
                 background: answered === opt ? 'rgba(215,255,0,0.12)' : 'rgba(255,255,255,0.04)',
                 border: answered === opt ? '1px solid rgba(215,255,0,0.5)' : '1px solid rgba(255,255,255,0.1)',
@@ -115,6 +119,8 @@ export default function QuizQuestion({ question, index, total, onAnswer, answere
                 cursor: answered ? 'default' : 'pointer',
                 boxShadow: answered === opt ? '0 0 12px rgba(215,255,0,0.1)' : 'none',
                 fontSize: 15,
+                textAlign: 'right',
+                direction: 'rtl',
               }}
             >
               {opt}
@@ -142,7 +148,7 @@ export default function QuizQuestion({ question, index, total, onAnswer, answere
                 boxShadow: answered === opt ? '0 0 12px rgba(215,255,0,0.1)' : 'none',
               }}
             >
-              {opt === 'true' ? 'True' : 'False'}
+              {opt === 'true' ? 'صح' : 'غلط'}
             </button>
           ))}
         </div>

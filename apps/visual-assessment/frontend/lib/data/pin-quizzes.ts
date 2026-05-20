@@ -121,9 +121,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
     ],
   },
   {
-    landmarkId: 'rh-9',
+    landmarkId: 'rh-8',
     masterPlanImage: '/Direction-white-Ras-al-hekma.jpeg',
-    focusPoint: { lat: 31.084885, lng: 28.0938281, zoom: 16 },
+    focusPoint: { lat: 31.0849104, lng: 28.0816526, zoom: 16 },
     questions: [
       {
         id: 'dwhite-q1',
@@ -154,9 +154,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
     ],
   },
   {
-    landmarkId: 'rh-10',
+    landmarkId: 'rh-3',
     masterPlanImage: '/Fouka-Bay-ras-al-hekma.jpeg',
-    focusPoint: { lat: 31.0848313, lng: 27.9356954, zoom: 16 },
+    focusPoint: { lat: 31.0895505, lng: 27.9364176, zoom: 16 },
     questions: [
       {
         id: 'fouka-q1',
@@ -187,9 +187,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
     ],
   },
   {
-    landmarkId: 'rh-11',
+    landmarkId: 'rh-4',
     masterPlanImage: '/Naia-ras-al-hekma.jpeg',
-    focusPoint: { lat: 31.0868005, lng: 27.9254001, zoom: 16 },
+    focusPoint: { lat: 31.0886594, lng: 27.9534117, zoom: 16 },
     questions: [
       {
         id: 'naia-q1',
@@ -220,9 +220,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
     ],
   },
   {
-    landmarkId: 'rh-12',
+    landmarkId: 'rh-1',
     masterPlanImage: '/Ras-el-hikma-Modon.jpeg',
-    focusPoint: { lat: 31.1182063, lng: 27.7843504, zoom: 16 },
+    focusPoint: { lat: 31.240333, lng: 27.860361, zoom: 16 },
     questions: [
       {
         id: 'modon-q1',
@@ -358,9 +358,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
   // ─── Marina ───────────────────────────────────────────────────────────────────
 
   {
-    landmarkId: 'mr-4',
+    landmarkId: 'mr-1',
     masterPlanImage: '/Hdp-the-Island-marina-8.jpeg',
-    focusPoint: { lat: 30.8406349, lng: 28.9831774, zoom: 16 },
+    focusPoint: { lat: 30.843, lng: 28.974, zoom: 16 },
     questions: [
       {
         id: 'hdp-q1',
@@ -430,9 +430,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
   // ─── New Alamein Districts ────────────────────────────────────────────────────
 
   {
-    landmarkId: 'na-10',
+    landmarkId: 'na-1',
     masterPlanImage: '/New-Alamein.jpeg',
-    focusPoint: { lat: 30.857, lng: 28.905, zoom: 15 },
+    focusPoint: { lat: 30.8607248, lng: 28.9166024, zoom: 15 },
     questions: [
       {
         id: 'na-latin-q1',
@@ -463,9 +463,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
     ],
   },
   {
-    landmarkId: 'na-11',
+    landmarkId: 'na-2',
     masterPlanImage: '/New-Alamein.jpeg',
-    focusPoint: { lat: 30.851, lng: 28.917, zoom: 15 },
+    focusPoint: { lat: 30.8572587, lng: 28.9136359, zoom: 15 },
     questions: [
       {
         id: 'na-downtown-q1',
@@ -496,9 +496,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
     ],
   },
   {
-    landmarkId: 'na-12',
+    landmarkId: 'na-7',
     masterPlanImage: '/New-Alamein.jpeg',
-    focusPoint: { lat: 30.849, lng: 28.935, zoom: 15 },
+    focusPoint: { lat: 30.859833, lng: 28.931222, zoom: 15 },
     questions: [
       {
         id: 'na-mazarine-q1',
@@ -529,9 +529,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
     ],
   },
   {
-    landmarkId: 'na-13',
+    landmarkId: 'na-5',
     masterPlanImage: '/New-Alamein.jpeg',
-    focusPoint: { lat: 30.837, lng: 28.947, zoom: 15 },
+    focusPoint: { lat: 30.8548433, lng: 28.9520834, zoom: 15 },
     questions: [
       {
         id: 'na-islands-q1',
@@ -562,9 +562,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
     ],
   },
   {
-    landmarkId: 'na-14',
+    landmarkId: 'na-9',
     masterPlanImage: '/New-Alamein.jpeg',
-    focusPoint: { lat: 30.844, lng: 28.930, zoom: 15 },
+    focusPoint: { lat: 30.858472, lng: 28.944861, zoom: 15 },
     questions: [
       {
         id: 'na-chalet-q1',
@@ -595,9 +595,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
     ],
   },
   {
-    landmarkId: 'na-15',
+    landmarkId: 'na-3',
     masterPlanImage: '/New-Alamein.jpeg',
-    focusPoint: { lat: 30.869, lng: 28.928, zoom: 15 },
+    focusPoint: { lat: 30.8429515, lng: 28.9400128, zoom: 15 },
     questions: [
       {
         id: 'na-ne4-q1',
@@ -628,9 +628,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
     ],
   },
   {
-    landmarkId: 'na-16',
+    landmarkId: 'na-8',
     masterPlanImage: '/New-Alamein.jpeg',
-    focusPoint: { lat: 30.871, lng: 28.940, zoom: 15 },
+    focusPoint: { lat: 30.860222, lng: 28.940861, zoom: 15 },
     questions: [
       {
         id: 'na-ne7-q1',
@@ -661,9 +661,9 @@ export const PIN_QUIZZES: PinQuizData[] = [
     ],
   },
   {
-    landmarkId: 'na-17',
+    landmarkId: 'na-6',
     masterPlanImage: '/New-Alamein.jpeg',
-    focusPoint: { lat: 30.863, lng: 28.945, zoom: 15 },
+    focusPoint: { lat: 30.863722, lng: 28.943222, zoom: 15 },
     questions: [
       {
         id: 'na-gate-q1',

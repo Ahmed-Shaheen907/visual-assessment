@@ -38,6 +38,8 @@ export default function QuizPage() {
   const answered = answers[currentIndex];
   const progress = ((currentIndex) / quizQuestions.length) * 100;
   const isLast = currentIndex === quizQuestions.length - 1;
+  const currentSection = Math.floor(currentIndex / QUESTIONS_PER_SECTION);
+  const isLastSection = currentSection === QUIZ_SECTIONS.length - 1;
 
   function handleAnswer(answer: string) {
     setAnswers((prev) => {
@@ -67,12 +69,13 @@ export default function QuizPage() {
     }
   }
 
-  async function handleSkipQuestion() {
+  async function handleSkipSection() {
     setShowSkipModal(false);
-    if (isLast) {
+    const nextSectionStart = (currentSection + 1) * QUESTIONS_PER_SECTION;
+    if (nextSectionStart >= quizQuestions.length) {
       await handleSkip();
     } else {
-      setCurrentIndex((i) => i + 1);
+      setCurrentIndex(nextSectionStart);
     }
   }
 
@@ -174,11 +177,29 @@ export default function QuizPage() {
             </p>
           </div>
         </div>
-        <div
-          className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold"
-          style={{ border: '1px solid rgba(215,255,0,0.3)', fontFamily: 'var(--font-space)', color: 'var(--tgl-lime)', background: 'rgba(215,255,0,0.06)' }}
-        >
-          {currentIndex + 1} <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span> {quizQuestions.length}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="px-3 py-1.5 rounded-full text-xs font-bold"
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              color: 'rgba(255,255,255,0.5)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              fontFamily: 'var(--font-space)',
+              cursor: 'pointer',
+              transition: 'all 150ms ease',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)'; }}
+          >
+            ← Home
+          </button>
+          <div
+            className="flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold"
+            style={{ border: '1px solid rgba(215,255,0,0.3)', fontFamily: 'var(--font-space)', color: 'var(--tgl-lime)', background: 'rgba(215,255,0,0.06)' }}
+          >
+            {currentIndex + 1} <span style={{ color: 'rgba(255,255,255,0.3)' }}>/</span> {quizQuestions.length}
+          </div>
         </div>
       </header>
 
@@ -245,7 +266,7 @@ export default function QuizPage() {
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.5)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '0.5'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.22)'; }}
             >
-              {isLast ? 'Skip & Finish →' : 'Skip Question →'}
+              {isLastSection ? 'Skip & Finish →' : 'Skip Section →'}
             </button>
             {isAdmin && (
               <button
@@ -283,7 +304,7 @@ export default function QuizPage() {
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.5)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '0.5'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.22)'; }}
             >
-              {isLast ? 'Skip & Finish →' : 'Skip Question →'}
+              {isLastSection ? 'Skip & Finish →' : 'Skip Section →'}
             </button>
             {isAdmin && (
               <button
@@ -307,12 +328,12 @@ export default function QuizPage() {
 
       {showSkipModal && (
         <ConfirmModal
-          title="Skip this question?"
-          body="This question will be marked as unanswered (0 pts). You can still see the model answer in results."
+          title="Skip this section?"
+          body="All remaining questions in this section will be marked as unanswered (0 pts). Answered questions keep their score. This cannot be undone."
           confirmLabel="Skip Anyway"
           cancelLabel="Go Back"
           variant="red"
-          onConfirm={handleSkipQuestion}
+          onConfirm={handleSkipSection}
           onCancel={() => setShowSkipModal(false)}
         />
       )}

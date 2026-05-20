@@ -257,8 +257,8 @@ function AnswerRowItem({ row, aiGrade }: { row: AnswerRow; aiGrade?: AiGrade }) 
             </span>
           </div>
         )}
-        {/* Model answer — always shown for AI-graded freetext */}
-        {aiResult && row.correctAnswer && (
+        {/* Model answer — shown when AI graded or when grading failed so manual review is possible */}
+        {(aiResult || aiGrade === 'error') && row.correctAnswer && (
           <div className="text-xs mt-1" dir="rtl" style={{ fontFamily: 'var(--font-montserrat)', color: 'rgba(255,255,255,0.5)', textAlign: 'right' }}>
             الإجابة النموذجية:{' '}
             <span className="font-semibold" style={{ color: 'rgba(215,255,0,0.75)' }}>{row.correctAnswer}</span>

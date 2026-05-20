@@ -542,6 +542,7 @@ export default function Phase1Page() {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 8,
+                overflow: 'hidden',
                 ...(quizActive ? {} : {
                   background: 'linear-gradient(180deg, #0d0d0d 0%, #090909 100%)',
                   border: '1px solid rgba(215,255,0,0.1)',
@@ -707,7 +708,7 @@ export default function Phase1Page() {
                   </div>
 
                   {/* Shuffled answer tokens */}
-                  <div className="flex flex-col gap-2 flex-1">
+                  <div className="flex flex-col gap-2 flex-1" style={{ overflowY: 'auto', minHeight: 0 }}>
                     {displayAnswers.map((ans, i) => (
                       <div
                         key={`${sectionIndex}-${ans.id}`}

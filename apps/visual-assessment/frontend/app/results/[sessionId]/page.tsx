@@ -243,6 +243,20 @@ function AnswerRowItem({ row, aiGrade }: { row: AnswerRow; aiGrade?: AiGrade }) 
             </span>
           </div>
         )}
+        {/* AI grading error — score shown is raw, not AI-verified */}
+        {aiGrade === 'error' && (
+          <div className="mt-1.5">
+            <span style={{
+              fontSize: 10, fontWeight: 600, fontFamily: 'var(--font-space)',
+              color: 'rgba(251,191,36,0.85)',
+              background: 'rgba(251,191,36,0.08)',
+              border: '1px solid rgba(251,191,36,0.2)',
+              borderRadius: 99, padding: '1px 8px',
+            }}>
+              ⚠ AI grading unavailable
+            </span>
+          </div>
+        )}
         {/* Model answer — always shown for AI-graded freetext */}
         {aiResult && row.correctAnswer && (
           <div className="text-xs mt-1" dir="rtl" style={{ fontFamily: 'var(--font-montserrat)', color: 'rgba(255,255,255,0.5)', textAlign: 'right' }}>

@@ -84,6 +84,61 @@ body {
   to   { opacity: 1; transform: scale(1);    filter: blur(0); }
 }
 
+/* ── Landmark panel scrollbar ── */
+.landmark-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(215,255,0,0.35) transparent;
+}
+
+.landmark-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.landmark-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 99px;
+  margin-block: 6px;
+}
+
+.landmark-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(215,255,0,0.08) 0%,
+    rgba(215,255,0,0.55) 40%,
+    rgba(215,255,0,0.55) 60%,
+    rgba(215,255,0,0.08) 100%
+  );
+  border-radius: 99px;
+  box-shadow:
+    0 0 6px rgba(215,255,0,0.5),
+    0 0 18px rgba(215,255,0,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+  transition: box-shadow 200ms ease, background 200ms ease;
+}
+
+.landmark-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(215,255,0,0.15) 0%,
+    #D7FF00 35%,
+    #D7FF00 65%,
+    rgba(215,255,0,0.15) 100%
+  );
+  box-shadow:
+    0 0 10px rgba(215,255,0,0.8),
+    0 0 28px rgba(215,255,0,0.35),
+    0 0 50px rgba(215,255,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.landmark-scroll::-webkit-scrollbar-thumb:active {
+  background: #D7FF00;
+  box-shadow:
+    0 0 14px rgba(215,255,0,1),
+    0 0 36px rgba(215,255,0,0.5),
+    0 0 70px rgba(215,255,0,0.2);
+}
+
 /* Draggable token hover — overrides inline styles */
 .draggable-token {
   transition: box-shadow 160ms ease, border-color 160ms ease;

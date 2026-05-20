@@ -556,7 +556,7 @@ export default function ResultsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userAnswer: a.answer_given, correctAnswer: q.answer }),
       })
-        .then(r => r.json())
+        .then(r => { if (!r.ok) throw new Error('grading_api_error'); return r.json(); })
         .then(data => setAiGrades(prev => ({ ...prev, [a.question_id]: { score: data.score, isCorrect: data.isCorrect } })))
         .catch(() => setAiGrades(prev => ({ ...prev, [a.question_id]: 'error' })));
     });

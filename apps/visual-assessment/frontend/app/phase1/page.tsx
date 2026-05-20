@@ -287,7 +287,7 @@ export default function Phase1Page() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="min-h-screen flex flex-col" style={{ background: 'var(--tgl-black)' }}>
+        <div className="h-screen flex flex-col" style={{ background: 'var(--tgl-black)' }}>
 
           {/* ── Header ── */}
           <header

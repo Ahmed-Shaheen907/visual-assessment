@@ -9,9 +9,18 @@ interface QuizQuestionProps {
   total: number;
   onAnswer: (answer: string) => void;
   answered: string | null;
+  onFreetextNext?: (answer: string) => void;
 }
 
-function FreeTextAnswer({ answered, onAnswer }: { answered: string | null; onAnswer: (a: string) => void }) {
+function FreeTextAnswer({
+  answered,
+  onAnswer,
+  onFreetextNext,
+}: {
+  answered: string | null;
+  onAnswer: (a: string) => void;
+  onFreetextNext?: (a: string) => void;
+}) {
   const [value, setValue] = useState('');
 
   if (answered) {
@@ -30,11 +39,27 @@ function FreeTextAnswer({ answered, onAnswer }: { answered: string | null; onAns
     );
   }
 
+  function submit() {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    if (onFreetextNext) {
+      onFreetextNext(trimmed);
+    } else {
+      onAnswer(trimmed);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            submit();
+          }
+        }}
         placeholder="اكتب إجابتك هنا…"
         dir="rtl"
         rows={3}
@@ -51,7 +76,7 @@ function FreeTextAnswer({ answered, onAnswer }: { answered: string | null; onAns
       />
       <button
         disabled={!value.trim()}
-        onClick={() => value.trim() && onAnswer(value.trim())}
+        onClick={submit}
         className="w-full py-3 rounded-xl text-sm font-bold transition-all duration-150 active:scale-95"
         style={{
           background: value.trim() ? 'var(--tgl-lime)' : 'rgba(215,255,0,0.06)',
@@ -62,13 +87,13 @@ function FreeTextAnswer({ answered, onAnswer }: { answered: string | null; onAns
           cursor: value.trim() ? 'pointer' : 'not-allowed',
         }}
       >
-        Submit Answer →
+        التالي →
       </button>
     </div>
   );
 }
 
-export default function QuizQuestion({ question, index, total, onAnswer, answered }: QuizQuestionProps) {
+export default function QuizQuestion({ question, index, total, onAnswer, answered, onFreetextNext }: QuizQuestionProps) {
   return (
     <div className="w-full max-w-2xl mx-auto">
       {/* Question counter + type badge */}
@@ -156,7 +181,12 @@ export default function QuizQuestion({ question, index, total, onAnswer, answere
 
       {/* Free text */}
       {question.type === 'freetext' && (
-        <FreeTextAnswer answered={answered} onAnswer={onAnswer} />
+        <FreeTextAnswer
+          key={question.id}
+          answered={answered}
+          onAnswer={onAnswer}
+          onFreetextNext={onFreetextNext}
+        />
       )}
     </div>
   );

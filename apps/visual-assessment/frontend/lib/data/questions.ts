@@ -20,8 +20,13 @@ export const QUESTIONS: Question[] = [
     type: 'mcq',
     section: 'marina',
     question: 'ما هم المطورون المتاحون في مارينا؟',
-    options: ['ميركون فقط', 'ميركون وسيد فقط', 'HDP وبالم هيلز', 'كل ما سبق'],
-    answer: 'كل ما سبق',
+    options: [
+      'ميركون وسيد وHDP',
+      'ميركون وبالم هيلز',
+      'HDP وسيد',
+      'سيتي إيدج وسيد',
+    ],
+    answer: 'ميركون وسيد وHDP',
     tip: 'المطورون المتاحون في مارينا ثلاثة: ميركون (مشاريع سولان وديز)، سيد (مارينا 8)، وHDP (الجزيرة - The Island).',
   },
   {
@@ -29,8 +34,13 @@ export const QUESTIONS: Question[] = [
     type: 'mcq',
     section: 'marina',
     question: 'ما هي المشاريع المتاحة من مطوري مارينا؟',
-    options: ['سولان وديز فقط', 'مارينا 8 فقط', 'الجزيرة (The Island) فقط', 'كل ما سبق'],
-    answer: 'كل ما سبق',
+    options: [
+      'سولان وديز ومارينا 8',
+      'الجزيرة (The Island) ومارينا 8',
+      'سولان وديز ومارينا 8 والجزيرة (The Island)',
+      'سولان وديز والجزيرة (The Island)',
+    ],
+    answer: 'سولان وديز ومارينا 8 والجزيرة (The Island)',
     tip: 'المشاريع المتاحة في مارينا: سولان وديز (ميركون)، مارينا 8 (سيد)، والجزيرة The Island (HDP).',
   },
   {
@@ -38,7 +48,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'marina',
     question: 'كيف تصل إلى كل مشروع من مشاريع مارينا؟',
-    answer: '',
+    answer: 'مارينا تقع على الكيلو 94 من طريق الساحل الشمالي. سولان وديز في المنطقة الداخلية، مارينا 8 على طريق البحر، والجزيرة في المنطقة الساحلية الأمامية. التنقل بينها بالسيارة عبر الطرق الداخلية.',
     tip: 'مارينا تقع على الكيلو 94 من طريق الساحل الشمالي. مشروعا سولان وديز (ميركون) يقعان في المنطقة الداخلية قريباً من البحر، مارينا 8 (سيد) على طريق البحر، والجزيرة (HDP) في المنطقة الساحلية الأمامية. يمكن الوصول بين المشاريع بالسيارة عبر الطرق الداخلية للمنتجع.',
   },
   {
@@ -46,7 +56,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'marina',
     question: 'ما هي نقطة البيع الفريدة لمشروع سولان – ديز (ميركون)؟',
-    answer: '',
+    answer: 'خطة سداد مرنة (10% مقدم على 10 سنوات)، موعد تسليم قريب (4 سنوات)، شاليهات في الصف الأول على البحر، تشطيب كامل مع تكييفات أو مفروش مع أجهزة.',
     tip: 'نقاط البيع الفريدة لمشاريع ميركون: خطة سداد مرنة، موعد تسليم قريب، القرب من البحر، وتوفر شاليهات في الصف الأول على البحر مباشرة. التشطيب كامل مع تكييفات أو مفروش مع أجهزة.',
   },
   {
@@ -54,7 +64,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'marina',
     question: 'ما هي خطة السداد التفصيلية لمشروع ميركون في مارينا؟',
-    answer: '',
+    answer: '10% مقدم على 10 سنوات، تسليم بعد 4 سنوات. الوحدات بتشطيب كامل مع تكييفات أو مفروشة مع أجهزة.',
     tip: 'خطة السداد في مشاريع ميركون بمارينا: 10% مقدم على 10 سنوات. موعد التسليم بعد 4 سنوات. الوحدات متاحة بتشطيب كامل مع تكييفات أو مفروشة مع أجهزة كاملة.',
   },
   {
@@ -64,7 +74,7 @@ export const QUESTIONS: Question[] = [
     question: 'ما أنواع التشطيب المتاحة في مشاريع ميركون؟',
     options: [
       'تشطيب كامل مع تكييفات ومفروش مع أجهزة',
-      'عظم (Core & Shell) فقط',
+      'عظم (Core & Shell)',
       'تشطيب كامل بدون تكييفات',
       'مفروش بدون أجهزة',
     ],
@@ -76,7 +86,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'marina',
     question: 'ما هو تاريخ كل مطور من المطورين الثلاثة في مارينا (ميركون – سيد – HDP)؟',
-    answer: '',
+    answer: 'ميركون: مطور مصري متخصص في الساحل الشمالي، معروف بالتشطيبات العالية الجودة. سيد: مطور ذو خبرة في مشاريع الشاليهات الساحلية. HDP: متخصص في الوحدات السياحية الفندقية على الساحل الشمالي.',
     tip: 'ميركون: مطور مصري راسخ متخصص في مشاريع الساحل الشمالي، يُعرف بالتشطيبات عالية الجودة. سيد: مطور عقاري مصري ذو خبرة في مشاريع الشاليهات الساحلية. HDP: مطور متخصص في مشاريع الوحدات السياحية الفندقية على الساحل الشمالي.',
   },
 
@@ -87,7 +97,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'new_alamein',
     question: 'ما هي مساحة مدينة العلمين الجديدة بالكامل؟',
-    answer: '',
+    answer: 'بين 40,000 و48,000 فدان.',
     tip: 'مساحة مدينة العلمين الجديدة تتراوح بين 40,000 و48,000 فدان، مما يجعلها من أكبر مدن الجيل الرابع على الساحل الشمالي.',
   },
   {
@@ -95,7 +105,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'new_alamein',
     question: 'لماذا تُصنَّف مدينة العلمين مدينةً للسكن والمعيشة على مدار العام؟',
-    answer: '',
+    answer: 'تضم 3 جامعات دولية، مطار، مدارس، مناطق خدمية متكاملة، وزارات وقصر رئاسي، مارينا دولية، وجهاز حكومي مستقل. هذا يتيح السكن الدائم وعائد إيجاري طوال العام.',
     tip: 'تُصنَّف العلمين مدينة للسكن الدائم لتوفرها على: 3 جامعات دولية، مطار، مدارس، مناطق خدمية متكاملة، وزارات وقصر رئاسي، مارينا دولية، وجهاز حكومي خاص. هذا يعني قيمة إيجارية وسكنية طوال العام.',
   },
   {
@@ -103,8 +113,13 @@ export const QUESTIONS: Question[] = [
     type: 'mcq',
     section: 'new_alamein',
     question: 'من هم المطورون المتاحون في مدينة العلمين الجديدة؟',
-    options: ['سيتي إيدج فقط', 'سيتي إيدج وسيد فقط', 'بالم هيلز فقط', 'كل ما سبق'],
-    answer: 'كل ما سبق',
+    options: [
+      'سيتي إيدج',
+      'سيتي إيدج وسيد',
+      'سيتي إيدج وبالم هيلز',
+      'سيتي إيدج وسيد وبالم هيلز',
+    ],
+    answer: 'سيتي إيدج وسيد وبالم هيلز',
     tip: 'المطورون المتاحون في العلمين الجديدة: سيتي إيدج (مشروع مازارين)، سيد، وبالم هيلز.',
   },
   {
@@ -138,8 +153,13 @@ export const QUESTIONS: Question[] = [
     type: 'mcq',
     section: 'new_alamein',
     question: 'أي من مراحل مشروع مازارين تحتوي على شقق سكنية (Apartments)؟',
-    options: ['Mazarine Apartment فقط', 'Latin District فقط', 'Mazarine Chalet فقط', 'كل ما سبق'],
-    answer: 'كل ما سبق',
+    options: [
+      'Mazarine Apartment',
+      'Mazarine Apartment وLatin District وMazarine Chalet',
+      'Mazarine Island وMazarine Ray',
+      'Mazarine Apartment وLatin District',
+    ],
+    answer: 'Mazarine Apartment وLatin District وMazarine Chalet',
     tip: 'المراحل التي تحتوي على شقق سكنية هي: Mazarine Apartment وLatin District وMazarine Chalet.',
   },
   {
@@ -147,8 +167,13 @@ export const QUESTIONS: Question[] = [
     type: 'mcq',
     section: 'new_alamein',
     question: 'أي من مراحل مازارين تحتوي على فيلات وشقق معاً؟',
-    options: ['Mazarine Island فقط', 'Mazarine Ray فقط', 'Mazarine Town فقط', 'كل ما سبق'],
-    answer: 'كل ما سبق',
+    options: [
+      'Mazarine Island وMazarine Ray وMazarine Town',
+      'Mazarine Island وMazarine Ray',
+      'Mazarine Boulevard وMazarine Chalet',
+      'Mazarine Island',
+    ],
+    answer: 'Mazarine Island وMazarine Ray وMazarine Town',
     tip: 'المراحل التي تضم فيلات وشققاً معاً هي: Mazarine Island وMazarine Ray وMazarine Town.',
   },
   {
@@ -156,7 +181,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'new_alamein',
     question: 'لو سألك عميل عن شقة بغرفتي نوم في City Edge العلمين، ماذا تفعل؟',
-    answer: '',
+    answer: 'توجيه العميل إلى Mazarine Apartments أو Mazarine Chalet لأنهما يضمان شققاً بغرفتين. مقارنة الموقع والسعر وخطط السداد بين المرحلتين وتقديم الخيارات المتاحة.',
     tip: 'توجّه العميل إلى مرحلتَي Mazarine Apartments أو Mazarine Chalet اللتين تضمان شققاً بغرفتين. تحقق من الأسعار الحالية وخطط السداد المتاحة، وقدّم للعميل الخيارات المتاحة مع المقارنة بين المرحلتين من حيث الموقع والسعر.',
   },
   {
@@ -181,7 +206,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'new_alamein',
     question: 'ما ارتفاع الأبراج السكنية في مدينة العلمين الجديدة؟',
-    answer: '',
+    answer: 'بين 40 و50 دوراً.',
     tip: 'ارتفاع أبراج العلمين الجديدة يتراوح بين 40 و50 دوراً، مما يجعلها من أعلى المباني السكنية على الساحل الشمالي المصري.',
   },
   {
@@ -189,7 +214,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'new_alamein',
     question: 'ما مساحة البحيرة الاصطناعية في مدينة العلمين الجديدة وعرضها؟',
-    answer: '',
+    answer: 'مساحتها 210 فدان وعرضها 512 متر.',
     tip: 'البحيرة الاصطناعية في العلمين الجديدة مساحتها 210 فدان وعرضها 512 متر، وهي من أكبر البحيرات الاصطناعية في مدن الجيل الرابع.',
   },
   {
@@ -197,7 +222,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'new_alamein',
     question: 'متى كان أول طرح رسمي لمدينة العلمين الجديدة؟',
-    answer: '',
+    answer: 'بين عامَي 2016 و2018.',
     tip: 'أول طرح رسمي لمدينة العلمين الجديدة كان بين عامَي 2016 و2018.',
   },
   {
@@ -205,7 +230,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'new_alamein',
     question: 'ما أسعار البداية في حي مازارين للشقق السكنية؟',
-    answer: '',
+    answer: '8,800,000 جنيه لخطة 7 سنوات، 9,120,000 جنيه لخطة 9 سنوات، 10,100,000 جنيه لخطة 12 سنة.',
     tip: 'أسعار البداية في حي مازارين للشقق: خطة 7 سنوات بـ 8,800,000 جنيه | خطة 9 سنوات بـ 9,120,000 جنيه | خطة 12 سنة بـ 10,100,000 جنيه.',
   },
 
@@ -216,7 +241,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'ما أشهر المعالم والمشاريع في منطقة سيدي عبد الرحمن؟',
-    answer: '',
+    answer: 'مراسي (Marassi) وأمواج (Amwaj).',
     tip: 'أشهر المعالم في سيدي عبد الرحمن: مراسي (Marassi) أحد أكبر مشاريع الساحل الشمالي، وأمواج (Amwaj) المشروع الشهير في المنطقة.',
   },
   {
@@ -238,7 +263,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'مشروع مراسي على الكيلو كم من طريق الساحل الشمالي؟',
-    answer: '',
+    answer: 'الكيلو 125 من طريق الساحل الشمالي.',
     tip: 'مشروع مراسي يقع على الكيلو 125 من طريق الساحل الشمالي في منطقة سيدي عبد الرحمن.',
   },
   {
@@ -246,7 +271,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'ما هو أقرب موعد تسليم متاح في مشاريع سيدي عبد الرحمن؟',
-    answer: '',
+    answer: 'زاهر وكاسكادا جاهزان للتسليم الفوري (RTM)، وجاليني يُسلَّم خلال 3-6 أشهر.',
     tip: 'أقرب التسليمات في سيدي عبد الرحمن: مشروع زاهر جاهز للتسليم فوراً (RTM)، وكذلك مشروع كاسكادا. مشروع جاليني (Galini) يُسلَّم خلال 3-6 أشهر.',
   },
   {
@@ -254,7 +279,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'مشروع أمواج على الكيلو كم من طريق الساحل الشمالي؟',
-    answer: '',
+    answer: 'الكيلو 134-135 من طريق الساحل الشمالي.',
     tip: 'مشروع أمواج يقع على الكيلو 134-135 من طريق الساحل الشمالي.',
   },
   {
@@ -262,7 +287,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'ما مساحة مشروع زاهر (Zaher) في سيدي عبد الرحمن؟',
-    answer: '',
+    answer: '900 فدان.',
     tip: 'مساحة مشروع زاهر في سيدي عبد الرحمن 900 فدان، مما يجعله من المشاريع الكبيرة في المنطقة.',
   },
   {
@@ -270,7 +295,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'ما عرض الشاطئ في مشروع مسايا (Masaya)؟',
-    answer: '',
+    answer: '200 متر.',
     tip: 'عرض الشاطئ في مشروع مسايا 200 متر.',
   },
   {
@@ -278,7 +303,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'ما هو آخر مشروع طُرح في منطقة سيدي عبد الرحمن؟',
-    answer: '',
+    answer: 'شماسي (Shamasi) من تطوير شركة سيراك.',
     tip: 'آخر مشروع طُرح في سيدي عبد الرحمن هو شماسي (Shamasi) من تطوير شركة سيراك.',
   },
   {
@@ -287,12 +312,12 @@ export const QUESTIONS: Question[] = [
     section: 'sidi_abdel_rahman',
     question: 'من هم أقوى المطورين المتاحين للبيع حالياً في سيدي عبد الرحمن؟',
     options: [
-      'إيجي جاب وسيراك فقط',
-      'بالم هيلز ولا فيستا فقط',
-      'البروج مصر فقط',
-      'كل ما سبق',
+      'إيجي جاب وسيراك',
+      'بالم هيلز ولا فيستا',
+      'إيجي جاب وسيراك ولا فيستا وبالم هيلز والبروج مصر',
+      'البروج مصر وسيتي إيدج',
     ],
-    answer: 'كل ما سبق',
+    answer: 'إيجي جاب وسيراك ولا فيستا وبالم هيلز والبروج مصر',
     tip: 'أقوى المطورين في سيدي عبد الرحمن: إيجي جاب (مسايا)، سيراك (شماسي)، لا فيستا، بالم هيلز، والبروج مصر.',
   },
   {
@@ -300,7 +325,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'ما أسعار البداية في مشاريع سيدي عبد الرحمن؟',
-    answer: '',
+    answer: 'من 5 مليون إلى 8 مليون جنيه.',
     tip: 'أسعار البداية في مشاريع سيدي عبد الرحمن تتراوح من 5 مليون إلى 8 مليون جنيه للوحدة.',
   },
   {
@@ -308,7 +333,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'ما مساحة اللاجون الداخلي في مشروع مسايا (Masaya)؟',
-    answer: '',
+    answer: '9,000 متر مربع.',
     tip: 'مساحة اللاجون الداخلي في مشروع مسايا 9,000 متر مربع.',
   },
   {
@@ -316,7 +341,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'ما هو آخر مشروع أُعلن عنه في منطقة سيدي عبد الرحمن؟',
-    answer: '',
+    answer: 'تلال (Telal).',
     tip: 'آخر مشروع أُعلن عنه في سيدي عبد الرحمن هو مشروع تلال (Telal).',
   },
   {
@@ -324,7 +349,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'ما خطة السداد المتاحة في مشروع شماسي (Shamasi)؟',
-    answer: '',
+    answer: '10% مقدم على 9 سنوات مع خصم 5% للكاش.',
     tip: 'خطة السداد في مشروع شماسي: 10% مقدم على 9 سنوات مع خصم 5% عند السداد النقدي.',
   },
   {
@@ -332,7 +357,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'هل سيكون اللاجون في مشروع شماسي صالحاً للسباحة؟ وما مساحته؟',
-    answer: '',
+    answer: 'نعم، صالح للسباحة بالكامل، مساحته 25,000 متر مربع.',
     tip: 'نعم، اللاجون في شماسي سيكون صالحاً للسباحة بالكامل، ومساحته 25,000 متر مربع.',
   },
   {
@@ -340,7 +365,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'مشروع بيانكي (Bianchi) على الكيلو كم من طريق الساحل الشمالي؟',
-    answer: '',
+    answer: 'الكيلو 135 من طريق الساحل الشمالي.',
     tip: 'مشروع بيانكي يقع على الكيلو 135 من طريق الساحل الشمالي.',
   },
   {
@@ -348,7 +373,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'ما مساحة مشروع بيانكي بالفدان؟',
-    answer: '',
+    answer: '104 فدان.',
     tip: 'مساحة مشروع بيانكي 104 فدان.',
   },
   {
@@ -356,7 +381,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'sidi_abdel_rahman',
     question: 'ما سعر بداية الشاليه في مشروع بيانكي؟',
-    answer: '',
+    answer: '9,000,000 جنيه مصري.',
     tip: 'سعر بداية الشاليه في مشروع بيانكي هو 9,000,000 جنيه مصري.',
   },
 
@@ -382,12 +407,12 @@ export const QUESTIONS: Question[] = [
     section: 'el_dabaa',
     question: 'ما أشهر المطورين الموجودين في منطقة الضبعة؟',
     options: [
-      'ووتر واي ولا فيستا فقط',
-      'ستار لايت وأكام الراجحي فقط',
-      'تطوير وبالم هيلز فقط',
-      'كل ما سبق',
+      'ووتر واي ولا فيستا',
+      'ستار لايت وأكام الراجحي وتطوير',
+      'بالم هيلز وميركون وسيتي إيدج',
+      'ووتر واي ولا فيستا وستار لايت وأكام الراجحي وتطوير وبالم هيلز',
     ],
-    answer: 'كل ما سبق',
+    answer: 'ووتر واي ولا فيستا وستار لايت وأكام الراجحي وتطوير وبالم هيلز',
     tip: 'أشهر المطورين في الضبعة: ووتر واي، لا فيستا (Bay East)، ستار لايت، أكام الراجحي (دوز/Dose)، تطوير (D-Bay)، وبالم هيلز.',
   },
   {
@@ -395,7 +420,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'أين يقع مشروع Water Way في الضبعة؟',
-    answer: '',
+    answer: 'الكيلو 173 في منطقة الضبعة.',
     tip: 'مشروع Water Way يقع على الكيلو 173 في منطقة الضبعة.',
   },
   {
@@ -403,7 +428,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'اذكر أهم مميزات مشروع Dose في الضبعة.',
-    answer: '',
+    answer: 'المطور أكام الراجحي، الكيلو 174، مساحة 125 فدان، واجهة بحرية 450 متر، تشطيب كامل مع تكييفات، 10% مقدم على 10 سنوات، خصم 40% للكاش، تسليم بعد 4 سنوات.',
     tip: 'أهم مميزات مشروع Dose: المطور أكام الراجحي، يقع على الكيلو 174، مساحة 125 فدان، واجهة بحرية 450 متر، تشطيب كامل مع تكييفات، خطة سداد 10% مقدم على 10 سنوات، خصم 40% للكاش، تسليم بعد 4 سنوات. المراحل: Jay Serviced Apartments (فندق U HOTEL) وSway وRay Chalet.',
   },
   {
@@ -411,7 +436,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'ما مساحة مشروع D-Bay في الضبعة؟',
-    answer: '',
+    answer: '200 فدان، على الكيلو 165.',
     tip: 'مساحة مشروع D-Bay من تطوير شركة تطوير مصر 200 فدان، ويقع على الكيلو 165.',
   },
   {
@@ -419,7 +444,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'ما مساحة مشروع Dose في الضبعة بالفدان؟',
-    answer: '',
+    answer: '125 فدان.',
     tip: 'مساحة مشروع Dose 125 فدان، من تطوير شركة أكام الراجحي.',
   },
   {
@@ -427,7 +452,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'أين يقع مشروع D-Bay في الضبعة؟',
-    answer: '',
+    answer: 'الكيلو 165 في الضبعة، من تطوير شركة تطوير مصر.',
     tip: 'مشروع D-Bay يقع على الكيلو 165 في منطقة الضبعة من تطوير شركة تطوير مصر.',
   },
   {
@@ -435,7 +460,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'ما اسم مشروع شركة لا فيستا في منطقة الضبعة؟',
-    answer: '',
+    answer: 'لا فيستا باي (La Vista Bay).',
     tip: 'مشروع شركة لا فيستا في الضبعة يُسمى "لا فيستا باي" (La Vista Bay).',
   },
   {
@@ -443,7 +468,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'أين يقع مشروع لا فيستا باي في الضبعة؟',
-    answer: '',
+    answer: 'الكيلو 168-169 في منطقة الضبعة.',
     tip: 'مشروع لا فيستا باي يقع على الكيلو 168-169 في منطقة الضبعة.',
   },
   {
@@ -451,7 +476,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'ما مساحة مشروع Seazen القمزي في الضبعة؟',
-    answer: '',
+    answer: '204 فدان، على الكيلو 170.',
     tip: 'مساحة مشروع Seazen من تطوير القمزي 204 فدان، ويقع على الكيلو 170.',
   },
   {
@@ -459,7 +484,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'ما هو العرض المميز في مشروع Dose بالضبعة؟',
-    answer: '',
+    answer: '10% مقدم على 5 سنوات مع خصم 30%.',
     tip: 'العرض المميز في مشروع Dose: 10% مقدم فقط على 5 سنوات مع خصم 30%.',
   },
   {
@@ -467,7 +492,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'ما مواعيد التسليم المتاحة في مشروع لا فيستا بالضبعة؟',
-    answer: '',
+    answer: 'جاهز للتسليم (RTM)، 2026، و2028.',
     tip: 'مواعيد التسليم المتاحة في لا فيستا بالضبعة: جاهز للتسليم (RTM)، 2026، و2028. هذا التنوع يمنح المشتري خيارات متعددة حسب احتياجاته.',
   },
   {
@@ -475,7 +500,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'أين يقع مشروع Seazen القمزي في الضبعة؟',
-    answer: '',
+    answer: 'الكيلو 170 في منطقة الضبعة.',
     tip: 'مشروع Seazen من تطوير القمزي يقع على الكيلو 170 في منطقة الضبعة.',
   },
   {
@@ -483,7 +508,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'ما مساحة مشروع La Vista Bay East في الضبعة؟',
-    answer: '',
+    answer: '310 فدان.',
     tip: 'مساحة مشروع La Vista Bay East 310 فدان (ملاحظة: المصدر المرجعي الأصلي يذكر 310 فدان).',
   },
   {
@@ -491,7 +516,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'el_dabaa',
     question: 'ما مساحة واجهة الشاطئ لمشروع Dose في الضبعة؟',
-    answer: '',
+    answer: '450 متر.',
     tip: 'واجهة الشاطئ في مشروع Dose تبلغ 450 متر، وهي من أكبر واجهات الشاطئ في مشاريع منطقة الضبعة.',
   },
 
@@ -516,7 +541,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'من هو مالك ومطور مشروع Azha North Coast في رأس الحكمة؟',
-    answer: '',
+    answer: 'شركة مدار (Madar)، المهندس حسام الشاعر.',
     tip: 'مشروع Azha North Coast من تطوير شركة مدار (Madar)، ويترأسها المهندس حسام الشاعر.',
   },
   {
@@ -524,7 +549,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'أين يقع مشروع Azha North Coast في خليج رأس الحكمة؟',
-    answer: '',
+    answer: 'الكيلو 214 في خليج رأس الحكمة.',
     tip: 'مشروع Azha North Coast يقع على الكيلو 214 في خليج رأس الحكمة.',
   },
   {
@@ -532,7 +557,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'ما مساحة مشروع Azha North Coast بالفدان؟',
-    answer: '',
+    answer: '250 فدان.',
     tip: 'مساحة مشروع Azha North Coast 250 فدان.',
   },
   {
@@ -540,7 +565,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'ما مساحة واجهة الشاطئ في مشروع Azha North Coast؟',
-    answer: '',
+    answer: '700 متر.',
     tip: 'واجهة الشاطئ في مشروع Azha North Coast تبلغ 700 متر.',
   },
   {
@@ -548,7 +573,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'ما مساحة بحيرات Crystal Lagoons في مشروع Azha North Coast؟',
-    answer: '',
+    answer: '45 فدان.',
     tip: 'مساحة بحيرات Crystal Lagoons في مشروع Azha North Coast تبلغ 45 فدان.',
   },
   {
@@ -556,7 +581,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'أين يقع مشروع Cali Coast في خليج رأس الحكمة؟',
-    answer: '',
+    answer: 'الكيلو 193 في خليج رأس الحكمة، من تطوير Maven.',
     tip: 'مشروع Cali Coast من تطوير Maven يقع على الكيلو 193 في خليج رأس الحكمة.',
   },
   {
@@ -564,7 +589,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'ما عمق مشروع Cali Coast من الشاطئ إلى الداخل؟',
-    answer: '',
+    answer: '1.6 كيلومتر.',
     tip: 'عمق مشروع Cali Coast 1.6 كيلومتر من الشاطئ إلى الداخل.',
   },
   {
@@ -572,7 +597,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'ما خطة السداد ومواعيد التسليم في مشروع Cali Coast؟',
-    answer: '',
+    answer: '5% مقدم على 9 سنوات، تسليم بعد 4 سنوات.',
     tip: 'خطة السداد في Cali Coast: 5% مقدم على 9 سنوات. موعد التسليم بعد 4 سنوات.',
   },
   {
@@ -580,7 +605,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'ما أسعار البداية في مشروع Cali Coast؟',
-    answer: '',
+    answer: 'من 6,400,000 إلى 7,500,000 جنيه.',
     tip: 'أسعار البداية في Cali Coast تتراوح من 6,400,000 إلى 7,500,000 جنيه.',
   },
   {
@@ -588,7 +613,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'من هو مالك شركة Arabella Development؟',
-    answer: '',
+    answer: 'محمد أمين الدخميسي.',
     tip: 'مالك شركة Arabella Development هو محمد أمين الدخميسي.',
   },
   {
@@ -596,7 +621,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'أين يقع مشروع Direction White في رأس الحكمة؟',
-    answer: '',
+    answer: 'الكيلو 193 في رأس الحكمة.',
     tip: 'مشروع Direction White يقع على الكيلو 193 في منطقة رأس الحكمة.',
   },
   {
@@ -604,7 +629,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'ما مساحة مشروع Direction White بالفدان؟',
-    answer: '',
+    answer: '290 فدان.',
     tip: 'مساحة مشروع Direction White 290 فدان.',
   },
   {
@@ -620,7 +645,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'ما اسم الفندق الدولي في مشروع Direction White؟',
-    answer: '',
+    answer: 'إنتر كونتيننتال – أزور (InterContinental – Azur).',
     tip: 'اسم الفندق الدولي في Direction White هو إنتر كونتيننتال – أزور (InterContinental – Azur).',
   },
   {
@@ -628,7 +653,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'ما مواعيد التسليم المتاحة في مشروع Direction White؟',
-    answer: '',
+    answer: '6 أشهر، أو سنة كاملة، أو 3 سنوات.',
     tip: 'مواعيد التسليم المتاحة في Direction White: 6 أشهر، سنة كاملة، أو 3 سنوات. هذا التنوع يتيح للعميل اختيار الموعد الأنسب له.',
   },
   {
@@ -636,7 +661,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'ما مساحة مشروع مدن (Moden) في رأس الحكمة؟',
-    answer: '',
+    answer: '12,000 فدان.',
     tip: 'مساحة مشروع مدن في رأس الحكمة 12,000 فدان، مما يجعله من أضخم مشاريع التطوير على الساحل الشمالي.',
   },
   {
@@ -644,7 +669,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'أين يقع مشروع مدن في رأس الحكمة؟',
-    answer: '',
+    answer: 'الكيلو 220 في رأس الحكمة.',
     tip: 'مشروع مدن يقع على الكيلو 220 في منطقة رأس الحكمة.',
   },
   {
@@ -652,7 +677,7 @@ export const QUESTIONS: Question[] = [
     type: 'freetext',
     section: 'ras_al_hekma',
     question: 'أين يقع مشروع Fouka Bay في رأس الحكمة؟',
-    answer: '',
+    answer: 'الكيلو 211 في رأس الحكمة، من تطوير شركة تطوير مصر.',
     tip: 'مشروع Fouka Bay من تطوير شركة تطوير مصر يقع على الكيلو 211 في منطقة رأس الحكمة.',
   },
 ];

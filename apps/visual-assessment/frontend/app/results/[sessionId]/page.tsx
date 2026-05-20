@@ -37,7 +37,10 @@ PIN_QUIZZES.forEach(pq => pq.questions.forEach(q => {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+type AiGrade = { score: number; isCorrect: boolean } | 'loading' | 'error';
+
 interface AnswerRow {
+  id?: string;
   questionLabel: string;
   given: string | null;
   correct: boolean | null;
@@ -141,6 +144,7 @@ function buildAnswerReview(answers: Answer[]): PhaseGroup[] {
       const q = QUESTION_MAP[a.question_id];
       const hasCorrect = q?.answer !== '' && q?.answer !== undefined;
       return {
+        id: a.question_id,
         questionLabel: q?.question ?? a.question_id,
         given: formatAnswerGiven(a.answer_given),
         correct: hasCorrect ? a.correct : null,
@@ -195,37 +199,59 @@ function ScoreBadge({ score, small }: { score: { correct: number; total: number 
   );
 }
 
-function AnswerRowItem({ row }: { row: AnswerRow }) {
-  const isGrey = row.correct === null;
+function AnswerRowItem({ row, aiGrade }: { row: AnswerRow; aiGrade?: AiGrade }) {
+  const aiResult = aiGrade && aiGrade !== 'loading' && aiGrade !== 'error' ? aiGrade : null;
+  const effectiveCorrect = aiResult ? aiResult.isCorrect : row.correct;
+  const isGrey = effectiveCorrect === null;
+
   return (
     <div
       className="px-5 py-3 flex items-start gap-3"
-      style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: row.correct === false ? 'rgba(239,68,68,0.03)' : 'transparent' }}
+      style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: effectiveCorrect === false ? 'rgba(239,68,68,0.03)' : 'transparent' }}
     >
       <div
         className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold mt-0.5"
         style={{
-          background: isGrey ? 'rgba(255,255,255,0.08)' : row.correct ? 'rgba(215,255,0,0.15)' : 'rgba(239,68,68,0.15)',
-          color: isGrey ? 'rgba(255,255,255,0.5)' : row.correct ? 'var(--tgl-lime)' : '#f87171',
+          background: isGrey ? 'rgba(255,255,255,0.08)' : effectiveCorrect ? 'rgba(215,255,0,0.15)' : 'rgba(239,68,68,0.15)',
+          color: isGrey ? 'rgba(255,255,255,0.5)' : effectiveCorrect ? 'var(--tgl-lime)' : '#f87171',
           fontFamily: 'var(--font-space)',
         }}
       >
-        {isGrey ? '—' : row.correct ? '✓' : '✗'}
+        {aiGrade === 'loading' ? '…' : isGrey ? '—' : effectiveCorrect ? '✓' : '✗'}
       </div>
       <div className="flex-1 min-w-0">
-        {/* Question label — high contrast */}
         <div className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-montserrat)' }}>
           {row.questionLabel}
         </div>
-        {/* "You answered" line */}
         <div className="text-xs mt-1" style={{ fontFamily: 'var(--font-montserrat)', color: 'rgba(255,255,255,0.6)' }}>
           You answered:{' '}
-          <span className="font-semibold" style={{ color: isGrey ? 'rgba(255,255,255,0.6)' : row.correct ? 'var(--tgl-lime)' : '#f87171' }}>
+          <span className="font-semibold" style={{ color: isGrey ? 'rgba(255,255,255,0.6)' : effectiveCorrect ? 'var(--tgl-lime)' : '#f87171' }}>
             {row.given ?? '—'}
           </span>
         </div>
-        {/* Correct answer shown when wrong */}
-        {!isGrey && !row.correct && row.correctAnswer && (
+        {/* AI score badge */}
+        {aiResult && (
+          <div className="flex items-center gap-2 mt-1.5">
+            <span style={{
+              fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-space)',
+              color: aiResult.isCorrect ? 'var(--tgl-lime)' : '#f87171',
+              background: aiResult.isCorrect ? 'rgba(215,255,0,0.1)' : 'rgba(239,68,68,0.1)',
+              border: `1px solid ${aiResult.isCorrect ? 'rgba(215,255,0,0.2)' : 'rgba(239,68,68,0.2)'}`,
+              borderRadius: 99, padding: '1px 8px',
+            }}>
+              AI: {aiResult.score}/100
+            </span>
+          </div>
+        )}
+        {/* Model answer — always shown for AI-graded freetext */}
+        {aiResult && row.correctAnswer && (
+          <div className="text-xs mt-1" dir="rtl" style={{ fontFamily: 'var(--font-montserrat)', color: 'rgba(255,255,255,0.5)', textAlign: 'right' }}>
+            الإجابة النموذجية:{' '}
+            <span className="font-semibold" style={{ color: 'rgba(215,255,0,0.75)' }}>{row.correctAnswer}</span>
+          </div>
+        )}
+        {/* Correct answer shown when wrong (non-AI rows) */}
+        {!aiResult && !isGrey && !effectiveCorrect && row.correctAnswer && (
           <div className="text-xs mt-0.5" style={{ fontFamily: 'var(--font-montserrat)', color: 'rgba(255,255,255,0.6)' }}>
             Correct answer:{' '}
             <span className="font-semibold" style={{ color: 'var(--tgl-lime)' }}>{row.correctAnswer}</span>
@@ -316,7 +342,7 @@ function SummaryPage({ scores, overall, best, worst }: {
   );
 }
 
-function SectionPage({ group }: { group: PhaseGroup }) {
+function SectionPage({ group, aiGrades }: { group: PhaseGroup; aiGrades?: Record<string, AiGrade> }) {
   const [collapsedSubs, setCollapsedSubs] = useState<Set<string>>(new Set());
   const passing = group.score.total > 0 && group.score.correct / group.score.total >= PASS_THRESHOLD;
 
@@ -346,7 +372,9 @@ function SectionPage({ group }: { group: PhaseGroup }) {
       </div>
 
       <div className="rounded-2xl overflow-hidden" style={{ background: '#0d0d0d', border: '1px solid rgba(215,255,0,0.08)' }}>
-        {group.rows.map((row, ri) => <AnswerRowItem key={ri} row={row} />)}
+        {group.rows.map((row, ri) => (
+          <AnswerRowItem key={ri} row={row} aiGrade={row.id ? aiGrades?.[row.id] : undefined} />
+        ))}
 
         {group.subGroups?.map((sub) => {
           const isSubCollapsed = collapsedSubs.has(sub.key);
@@ -487,6 +515,7 @@ export default function ResultsPage() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [downloading, setDownloading] = useState(false);
+  const [aiGrades, setAiGrades] = useState<Record<string, AiGrade>>({});
 
   useEffect(() => {
     if (!sessionId) return;
@@ -495,6 +524,29 @@ export default function ResultsPage() {
       .catch(() => setError('Could not load results. Please try again.'))
       .finally(() => setLoading(false));
   }, [sessionId]);
+
+  useEffect(() => {
+    if (!answers.length) return;
+    const freetextAnswers = answers.filter(a => {
+      const q = QUESTION_MAP[a.question_id];
+      return a.phase === 'phase2' && q?.type === 'freetext' && q?.answer && a.answer_given;
+    });
+    if (freetextAnswers.length === 0) return;
+    const init: Record<string, AiGrade> = {};
+    freetextAnswers.forEach(a => { init[a.question_id] = 'loading'; });
+    setAiGrades(init);
+    freetextAnswers.forEach(a => {
+      const q = QUESTION_MAP[a.question_id]!;
+      fetch('/api/grade-freetext', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userAnswer: a.answer_given, correctAnswer: q.answer }),
+      })
+        .then(r => r.json())
+        .then(data => setAiGrades(prev => ({ ...prev, [a.question_id]: { score: data.score, isCorrect: data.isCorrect } })))
+        .catch(() => setAiGrades(prev => ({ ...prev, [a.question_id]: 'error' })));
+    });
+  }, [answers]);
 
   if (loading) {
     return (
@@ -664,7 +716,7 @@ export default function ResultsPage() {
           <SummaryPage scores={scores} overall={overall} best={best} worst={worst} />
         )}
         {currentGroup && (
-          <SectionPage group={currentGroup} />
+          <SectionPage group={currentGroup} aiGrades={aiGrades} />
         )}
         {currentPageKey === 'improvement' && (
           <ImprovementPage weakSections={weakSections} />

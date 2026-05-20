@@ -9,6 +9,7 @@ import {
   DragEndEvent,
   DragStartEvent,
   DragOverlay,
+  rectIntersection,
   useSensor,
   useSensors,
   PointerSensor,
@@ -276,7 +277,7 @@ export default function Phase1Page() {
     <>
       <DndContext
         sensors={sensors}
-        collisionDetection={cursorCollision}
+        collisionDetection={rectIntersection}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >

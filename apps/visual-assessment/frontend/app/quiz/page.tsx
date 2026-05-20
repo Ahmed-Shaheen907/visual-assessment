@@ -88,6 +88,31 @@ export default function QuizPage() {
     }
   }
 
+  async function handleFreetextNext(answer: string) {
+    const newAnswers = [...answers];
+    newAnswers[currentIndex] = answer;
+    setAnswers(newAnswers);
+    if (isLast) {
+      setFinishing(true);
+      const sessionId = localStorage.getItem('va_session_id');
+      if (sessionId) {
+        await saveAnswers(
+          sessionId,
+          quizQuestions.map((q, i) => ({
+            phase: 'phase2',
+            question_id: q.id,
+            answer_given: newAnswers[i] ?? null,
+            correct: q.type === 'freetext' ? true : newAnswers[i]?.toLowerCase() === (q.answer as string).toLowerCase(),
+          }))
+        );
+        await markSessionComplete(sessionId);
+        router.push(`/results/${sessionId}`);
+      }
+    } else {
+      setCurrentIndex((i) => i + 1);
+    }
+  }
+
   if (quizQuestions.length === 0) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center p-8" style={{ background: 'var(--tgl-black)' }}>
@@ -172,6 +197,7 @@ export default function QuizPage() {
           total={quizQuestions.length}
           onAnswer={handleAnswer}
           answered={answered}
+          onFreetextNext={handleFreetextNext}
         />
 
         {/* Next / Finish button — appears after answering */}

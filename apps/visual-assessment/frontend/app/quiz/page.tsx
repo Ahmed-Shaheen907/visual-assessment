@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import QuizQuestion from '@/components/QuizQuestion';
+import ConfirmModal from '@/components/ConfirmModal';
 import type { Question } from '@/lib/data/questions';
 import { QUESTIONS_BY_SECTION } from '@/lib/data/questions';
 import { saveAnswers, markSessionComplete } from '@/lib/supabase-helpers';
@@ -30,6 +31,7 @@ export default function QuizPage() {
   );
   const [answers, setAnswers] = useState<(string | null)[]>(() => Array(quizQuestions.length).fill(null));
   const [finishing, setFinishing] = useState(false);
+  const [showSkipModal, setShowSkipModal] = useState(false);
   const isAdmin = typeof window !== 'undefined' && localStorage.getItem('va_user_email') === 'admin@gmail.com';
 
   const question = quizQuestions[currentIndex];
@@ -62,6 +64,15 @@ export default function QuizPage() {
       );
       await markSessionComplete(sessionId);
       router.push(`/results/${sessionId}`);
+    }
+  }
+
+  async function handleSkipQuestion() {
+    setShowSkipModal(false);
+    if (isLast) {
+      await handleSkip();
+    } else {
+      setCurrentIndex((i) => i + 1);
     }
   }
 
@@ -218,6 +229,24 @@ export default function QuizPage() {
             >
               {finishing ? 'Saving results…' : isLast ? 'Finish & See Results →' : 'Next Question →'}
             </button>
+            <button
+              onClick={() => setShowSkipModal(true)}
+              disabled={finishing}
+              className="w-full py-2 rounded-xl text-xs font-bold"
+              style={{
+                background: 'transparent',
+                color: 'rgba(239,68,68,0.65)',
+                border: '1px dashed rgba(239,68,68,0.22)',
+                fontFamily: 'var(--font-space)',
+                cursor: finishing ? 'not-allowed' : 'pointer',
+                opacity: 0.5,
+                transition: 'opacity 150ms ease, border-color 150ms ease',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.5)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '0.5'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.22)'; }}
+            >
+              {isLast ? 'Skip & Finish →' : 'Skip Question →'}
+            </button>
             {isAdmin && (
               <button
                 onClick={handleSkip}
@@ -236,25 +265,57 @@ export default function QuizPage() {
             )}
           </div>
         )}
-        {isAdmin && !answered && (
-          <div className="mt-10 w-full max-w-2xl">
+        {!answered && (
+          <div className="mt-10 w-full max-w-2xl flex flex-col gap-3">
             <button
-              onClick={handleSkip}
+              onClick={() => setShowSkipModal(true)}
               disabled={finishing}
-              className="w-full py-2 rounded-xl text-xs font-bold transition-all duration-150 active:scale-95"
+              className="w-full py-2 rounded-xl text-xs font-bold"
               style={{
                 background: 'transparent',
-                color: 'rgba(251,146,60,0.7)',
-                border: '1px dashed rgba(251,146,60,0.35)',
+                color: 'rgba(239,68,68,0.65)',
+                border: '1px dashed rgba(239,68,68,0.22)',
                 fontFamily: 'var(--font-space)',
                 cursor: finishing ? 'not-allowed' : 'pointer',
+                opacity: 0.5,
+                transition: 'opacity 150ms ease, border-color 150ms ease',
               }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.5)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '0.5'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.22)'; }}
             >
-              ⚡ Skip to Results →
+              {isLast ? 'Skip & Finish →' : 'Skip Question →'}
             </button>
+            {isAdmin && (
+              <button
+                onClick={handleSkip}
+                disabled={finishing}
+                className="w-full py-2 rounded-xl text-xs font-bold"
+                style={{
+                  background: 'transparent',
+                  color: 'rgba(251,146,60,0.7)',
+                  border: '1px dashed rgba(251,146,60,0.35)',
+                  fontFamily: 'var(--font-space)',
+                  cursor: finishing ? 'not-allowed' : 'pointer',
+                }}
+              >
+                ⚡ Skip to Results →
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {showSkipModal && (
+        <ConfirmModal
+          title="Skip this question?"
+          body="This question will be marked as unanswered (0 pts). You can still see the model answer in results."
+          confirmLabel="Skip Anyway"
+          cancelLabel="Go Back"
+          variant="red"
+          onConfirm={handleSkipQuestion}
+          onCancel={() => setShowSkipModal(false)}
+        />
+      )}
     </main>
   );
 }

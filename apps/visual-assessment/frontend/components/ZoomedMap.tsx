@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, MutableRefObject } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { useDroppable } from '@dnd-kit/core';
 import L from 'leaflet';
@@ -21,6 +21,14 @@ const LANDMARK_COLORS = [
 ];
 
 export type QuizPhase = 'idle' | 'zooming' | 'transitioning' | 'active';
+
+// ─── MapRefCapture ────────────────────────────────────────────────────────────
+
+function MapRefCapture({ mapRef }: { mapRef: MutableRefObject<L.Map | null> }) {
+  const map = useMap();
+  useEffect(() => { mapRef.current = map; }, [map, mapRef]);
+  return null;
+}
 
 // ─── FlyController ────────────────────────────────────────────────────────────
 
@@ -264,7 +272,22 @@ export default function ZoomedMap({
   onDeselectLabel,
 }: ZoomedMapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const mapRef = useRef<L.Map | null>(null);
   const handlePositions = useCallback((pos: Record<string, { x: number; y: number }>) => setPositions(pos), []);
+
+  const forwardWheel = useCallback((e: React.WheelEvent) => {
+    if (!mapRef.current) return;
+    mapRef.current.getContainer().dispatchEvent(
+      new WheelEvent('wheel', {
+        deltaY: e.deltaY,
+        deltaX: e.deltaX,
+        deltaMode: e.deltaMode,
+        ctrlKey: e.ctrlKey,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+  }, []);
 
   const mapFaded = quizPhase === 'transitioning' || quizPhase === 'active';
 
@@ -295,6 +318,7 @@ export default function ZoomedMap({
             maxZoom={19}
             maxNativeZoom={19}
           />
+          <MapRefCapture mapRef={mapRef} />
           <FlyController
             bounds={bounds as L.LatLngBoundsExpression}
             target={quizPhase === 'zooming' ? activePinTarget : undefined}
@@ -307,7 +331,7 @@ export default function ZoomedMap({
         </MapContainer>
 
         {/* Pin overlay — sits above the Leaflet canvas */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} onWheel={forwardWheel}>
           {dropZones.map((zone, i) => (
             <DroppablePin
               key={zone.id}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { useDroppable } from '@dnd-kit/core';
 import L from 'leaflet';
@@ -29,6 +29,14 @@ const ZONE_COLORS: Record<string, string> = {
   'zone-5': '#ff3cac',
   'zone-6': '#10b981',
 };
+
+// ─── MapRefCapture ────────────────────────────────────────────────────────────
+
+function MapRefCapture({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null> }) {
+  const map = useMap();
+  useEffect(() => { mapRef.current = map; }, [map, mapRef]);
+  return null;
+}
 
 // ─── MapClickHandler ──────────────────────────────────────────────────────────
 
@@ -259,9 +267,24 @@ export default function Map({
   onReady,
 }: MapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const mapRef = useRef<L.Map | null>(null);
 
   const handlePositions = useCallback((pos: Record<string, { x: number; y: number }>) => {
     setPositions(pos);
+  }, []);
+
+  const forwardWheel = useCallback((e: React.WheelEvent) => {
+    if (!mapRef.current) return;
+    mapRef.current.getContainer().dispatchEvent(
+      new WheelEvent('wheel', {
+        deltaY: e.deltaY,
+        deltaX: e.deltaX,
+        deltaMode: e.deltaMode,
+        ctrlKey: e.ctrlKey,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
   }, []);
 
   useEffect(() => {
@@ -287,13 +310,14 @@ export default function Map({
           maxZoom={19}
           maxNativeZoom={19}
         />
+        <MapRefCapture mapRef={mapRef} />
         <MapTracker dropZones={dropZones} onPositionsUpdate={handlePositions} />
         {selectedLabelId && onDeselectLabel && (
           <MapClickHandler onMapClick={onDeselectLabel} />
         )}
       </MapContainer>
 
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} onWheel={forwardWheel}>
         {dropZones.map((zone, i) => (
           <DroppablePin
             key={zone.id}

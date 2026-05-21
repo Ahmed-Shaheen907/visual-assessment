@@ -25,6 +25,7 @@ import { PIN_QUIZZES } from '@/lib/data/pin-quizzes';
 import { KM_RANGES } from '@/lib/data/km-ranges';
 import type { KmRange } from '@/lib/data/km-ranges';
 import { saveAnswers } from '@/lib/supabase-helpers';
+import { QUESTIONS_BY_SECTION } from '@/lib/data/questions';
 
 const masterPlanImageMap: Record<string, string> = Object.fromEntries(
   PIN_QUIZZES.map((q) => [q.landmarkId, q.masterPlanImage])
@@ -58,8 +59,19 @@ function buildDisplayAnswers(zones: DropZone[]) {
 export default function Phase1Page() {
   const router = useRouter();
 
-  const [sectionIndex, setSectionIndex]       = useState(0);
-  const [activeBoundsIndex, setActiveBoundsIndex] = useState(0);
+  const [initialSectionIndex] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    const raw = localStorage.getItem('va_next_section_index');
+    if (raw !== null) {
+      localStorage.removeItem('va_next_section_index');
+      const idx = Number(raw);
+      return idx < SECTIONS.length ? idx : 0;
+    }
+    return 0;
+  });
+
+  const [sectionIndex, setSectionIndex]       = useState(initialSectionIndex);
+  const [activeBoundsIndex, setActiveBoundsIndex] = useState(initialSectionIndex);
   const [transitioning, setTransitioning]     = useState(true);
   const [dropZones, setDropZones]             = useState<DropZone[]>([]);
   const [displayAnswers, setDisplayAnswers]   = useState<{ id: string; label: string }[]>([]);
@@ -82,12 +94,13 @@ export default function Phase1Page() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const zones = buildZones(0);
+      const zones = buildZones(initialSectionIndex);
       setDropZones(zones);
       setDisplayAnswers(buildDisplayAnswers(zones));
       setTransitioning(false);
     }, 1800);
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const quizPinIds     = new Set(PIN_QUIZZES.map((q) => q.landmarkId));
@@ -256,7 +269,11 @@ export default function Phase1Page() {
       }
     }
     setSaving(false);
-    if (sectionIndex < SECTIONS.length - 1) {
+    const hasQuestions = (QUESTIONS_BY_SECTION[section.id]?.length ?? 0) > 0;
+    if (hasQuestions) {
+      localStorage.setItem('va_next_section_index', String(sectionIndex + 1));
+      router.push(`/section-quiz/${section.id}`);
+    } else if (sectionIndex < SECTIONS.length - 1) {
       const nextIdx   = sectionIndex + 1;
       const nextZones = buildZones(nextIdx);
       advanceSection(nextIdx, nextZones);
@@ -277,7 +294,11 @@ export default function Phase1Page() {
       })));
     }
     setSaving(false);
-    if (sectionIndex < SECTIONS.length - 1) {
+    const hasQuestions = (QUESTIONS_BY_SECTION[section.id]?.length ?? 0) > 0;
+    if (hasQuestions) {
+      localStorage.setItem('va_next_section_index', String(sectionIndex + 1));
+      router.push(`/section-quiz/${section.id}`);
+    } else if (sectionIndex < SECTIONS.length - 1) {
       const nextIdx   = sectionIndex + 1;
       const nextZones = buildZones(nextIdx);
       advanceSection(nextIdx, nextZones);

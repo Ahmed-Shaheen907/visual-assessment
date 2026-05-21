@@ -24,11 +24,16 @@ function shuffleArray<T>(arr: T[]): T[] {
 export default function QuizPage() {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [quizQuestions] = useState<Question[]>(() =>
-    QUIZ_SECTIONS.flatMap((sec) =>
-      shuffleArray(QUESTIONS_BY_SECTION[sec] ?? []).slice(0, QUESTIONS_PER_SECTION)
-    )
-  );
+  const [quizQuestions] = useState<Question[]>(() => {
+    const sessionId = localStorage.getItem('va_session_id');
+    const usedRaw = sessionId ? localStorage.getItem(`va_mini_used_${sessionId}`) : null;
+    const usedIds = new Set<string>(usedRaw ? JSON.parse(usedRaw) : []);
+    return QUIZ_SECTIONS.flatMap((sec) => {
+      const available = (QUESTIONS_BY_SECTION[sec] ?? []).filter((q) => !usedIds.has(q.id));
+      if (available.length < QUESTIONS_PER_SECTION) return [];
+      return shuffleArray(available).slice(0, QUESTIONS_PER_SECTION);
+    });
+  });
   const [answers, setAnswers] = useState<(string | null)[]>(() => Array(quizQuestions.length).fill(null));
   const [finishing, setFinishing] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
@@ -39,7 +44,8 @@ export default function QuizPage() {
   const progress = ((currentIndex) / quizQuestions.length) * 100;
   const isLast = currentIndex === quizQuestions.length - 1;
   const currentSection = Math.floor(currentIndex / QUESTIONS_PER_SECTION);
-  const isLastSection = currentSection === QUIZ_SECTIONS.length - 1;
+  const activeSectionCount = quizQuestions.length / QUESTIONS_PER_SECTION;
+  const isLastSection = currentSection === activeSectionCount - 1;
 
   function handleAnswer(answer: string) {
     setAnswers((prev) => {

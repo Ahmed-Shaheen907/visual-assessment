@@ -102,7 +102,7 @@ export const SECTIONS: Section[] = [
     bounds: [[30.80, 28.96], [30.86, 29.02]],
     improvementTip: 'Study the Marina El Alamein compound — its marina, resort layout, and key landmarks.',
     landmarks: [
-      { id: 'mr-road-1', label: 'Wadi El Natrun - El Alamein Road', lat: 30.840, lng: 29.010, type: 'road' },
+      { id: 'mr-road-1', label: 'Wadi El Natrun - El Alamein Road', lat: 30.81454, lng: 28.983809, type: 'road' },
       { id: 'mr-1', label: 'Marina Landmark 1', lat: 30.843, lng: 28.974 },
       { id: 'mr-2', label: 'Marina Landmark 2', lat: 30.831, lng: 28.985 },
       { id: 'mr-3', label: 'Marina Landmark 3', lat: 30.820, lng: 28.997 },

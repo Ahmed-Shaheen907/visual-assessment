@@ -186,6 +186,9 @@ function DroppablePin({
 
   if (!pos || zone.id === hiddenPinId) return null;
 
+  const isRoad = zone.type === 'road';
+  const roadColor = isCorrect ? '#D7FF00' : isWrong ? '#ef4444' : '#f59e0b';
+
   return (
     <div
       ref={setNodeRef}
@@ -214,40 +217,67 @@ function DroppablePin({
         justifyContent: 'center',
       }}
     >
-      {/* Outer glow ring */}
-      <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', background: `radial-gradient(circle, ${pinColor}33 0%, transparent 70%)`, opacity: isOver || placementMode ? 1 : answered ? 0.3 : 0.7, transition: 'opacity 0.2s', pointerEvents: 'none', animation: answered || submitted ? 'none' : 'pin-pulse-ring 2.5s ease-in-out infinite' }} />
-      {/* Border ring */}
-      <div style={{ position: 'absolute', width: 62, height: 62, borderRadius: '50%', left: '50%', top: '50%', transform: isOver ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%)', border: `2px solid ${pinColor}`, opacity: isOver ? 1 : answered ? 0.5 : 0.65, boxShadow: isOver ? `0 0 16px ${pinColor}88` : answered ? `0 0 10px ${pinColor}44` : 'none', transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s', pointerEvents: 'none' }} />
-      {/* Center circle */}
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          background: canClick ? 'var(--tgl-lime)' : answered ? pinColor : baseColor,
-          border: '2.5px solid rgba(0,0,0,0.5)',
-          boxShadow: canClick
-            ? '0 0 14px rgba(215,255,0,0.8), 0 0 28px rgba(215,255,0,0.4)'
-            : `0 2px 12px ${pinColor}88, 0 0 0 1px ${pinColor}44`,
+      {isRoad ? (
+        /* Road sign badge — rectangular highway-sign style */
+        <div style={{
+          background: 'rgba(6,8,18,0.92)',
+          border: `2px solid ${roadColor}`,
+          borderRadius: 6,
+          padding: '5px 11px 5px 8px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          transition: 'background 0.25s, transform 0.15s, box-shadow 0.25s',
-          transform: isOver ? 'scale(1.15)' : 'scale(1)',
-          animation: isBlinking ? 'star-blink 0.8s ease-in-out infinite' : answered || submitted ? 'none' : 'pin-pulse 2.5s ease-in-out infinite',
-        }}
-      >
-        {submitted ? (
-          <span style={{ color: isCorrect ? '#000' : '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'var(--font-space)' }}>{isCorrect ? '✓' : '✗'}</span>
-        ) : canClick ? (
-          <span style={{ color: '#000', fontSize: 13, fontWeight: 900, fontFamily: 'var(--font-space)' }}>✦</span>
-        ) : answered ? (
-          <span style={{ color: '#000', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space)' }}>●</span>
-        ) : (
-          <span style={{ color: '#fff', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space)' }}>{index + 1}</span>
-        )}
-      </div>
+          gap: 5,
+          boxShadow: isOver
+            ? `0 0 16px ${roadColor}88, 0 0 0 1px ${roadColor}55`
+            : `0 2px 10px rgba(0,0,0,0.6), 0 0 0 1px ${roadColor}33`,
+          transform: isOver || placementMode ? 'scale(1.08)' : 'scale(1)',
+          transition: 'transform 0.18s ease, box-shadow 0.18s, border-color 0.25s',
+          animation: !answered && !submitted ? 'pin-pulse-ring 2.5s ease-in-out infinite' : 'none',
+          pointerEvents: 'none',
+        }}>
+          <span style={{ fontSize: 10, color: roadColor, lineHeight: 1, transition: 'color 0.25s' }}>⇒</span>
+          <span style={{ color: roadColor, fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-space)', letterSpacing: '0.04em', transition: 'color 0.25s' }}>
+            {submitted ? (isCorrect ? '✓' : '✗') : answered ? '●' : String(index + 1)}
+          </span>
+        </div>
+      ) : (
+        <>
+          {/* Outer glow ring */}
+          <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', background: `radial-gradient(circle, ${pinColor}33 0%, transparent 70%)`, opacity: isOver || placementMode ? 1 : answered ? 0.3 : 0.7, transition: 'opacity 0.2s', pointerEvents: 'none', animation: answered || submitted ? 'none' : 'pin-pulse-ring 2.5s ease-in-out infinite' }} />
+          {/* Border ring */}
+          <div style={{ position: 'absolute', width: 62, height: 62, borderRadius: '50%', left: '50%', top: '50%', transform: isOver ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%)', border: `2px solid ${pinColor}`, opacity: isOver ? 1 : answered ? 0.5 : 0.65, boxShadow: isOver ? `0 0 16px ${pinColor}88` : answered ? `0 0 10px ${pinColor}44` : 'none', transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s', pointerEvents: 'none' }} />
+          {/* Center circle */}
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: canClick ? 'var(--tgl-lime)' : answered ? pinColor : baseColor,
+              border: '2.5px solid rgba(0,0,0,0.5)',
+              boxShadow: canClick
+                ? '0 0 14px rgba(215,255,0,0.8), 0 0 28px rgba(215,255,0,0.4)'
+                : `0 2px 12px ${pinColor}88, 0 0 0 1px ${pinColor}44`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              transition: 'background 0.25s, transform 0.15s, box-shadow 0.25s',
+              transform: isOver ? 'scale(1.15)' : 'scale(1)',
+              animation: isBlinking ? 'star-blink 0.8s ease-in-out infinite' : answered || submitted ? 'none' : 'pin-pulse 2.5s ease-in-out infinite',
+            }}
+          >
+            {submitted ? (
+              <span style={{ color: isCorrect ? '#000' : '#fff', fontSize: 14, fontWeight: 800, fontFamily: 'var(--font-space)' }}>{isCorrect ? '✓' : '✗'}</span>
+            ) : canClick ? (
+              <span style={{ color: '#000', fontSize: 13, fontWeight: 900, fontFamily: 'var(--font-space)' }}>✦</span>
+            ) : answered ? (
+              <span style={{ color: '#000', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space)' }}>●</span>
+            ) : (
+              <span style={{ color: '#fff', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space)' }}>{index + 1}</span>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Masterplan hover preview */}
       {canClick && masterPlanImage && (
@@ -295,7 +325,7 @@ function DroppablePin({
       {answered && (
         <div
           onClick={!submitted && onRemove ? (e) => { e.stopPropagation(); onRemove(zone.id); } : undefined}
-          style={{ position: 'absolute', top: 64, left: '50%', transform: 'translateX(-50%)', background: submitted ? (isCorrect ? '#D7FF00' : '#ef4444') : 'rgba(8, 10, 20, 0.88)', color: submitted ? (isCorrect ? '#000' : '#fff') : '#fff', fontSize: 9, fontWeight: 700, padding: submitted ? '2px 8px' : '2px 6px 2px 8px', borderRadius: 4, whiteSpace: 'nowrap', boxShadow: submitted ? (isCorrect ? '0 0 10px rgba(215,255,0,0.5)' : '0 0 10px rgba(239,68,68,0.5)') : '0 2px 10px rgba(0,0,0,0.5)', border: submitted ? 'none' : '1px solid rgba(215,255,0,0.3)', pointerEvents: submitted ? 'none' : 'all', cursor: submitted ? 'default' : 'pointer', fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)', letterSpacing: '0.02em', transition: 'background 0.3s, color 0.3s', display: 'flex', alignItems: 'center', gap: 4 }}
+          style={{ position: 'absolute', top: isRoad ? 80 : 64, left: '50%', transform: 'translateX(-50%)', background: submitted ? (isCorrect ? '#D7FF00' : '#ef4444') : 'rgba(8, 10, 20, 0.88)', color: submitted ? (isCorrect ? '#000' : '#fff') : '#fff', fontSize: 9, fontWeight: 700, padding: submitted ? '2px 8px' : '2px 6px 2px 8px', borderRadius: 4, whiteSpace: 'nowrap', boxShadow: submitted ? (isCorrect ? '0 0 10px rgba(215,255,0,0.5)' : '0 0 10px rgba(239,68,68,0.5)') : '0 2px 10px rgba(0,0,0,0.5)', border: submitted ? 'none' : '1px solid rgba(215,255,0,0.3)', pointerEvents: submitted ? 'none' : 'all', cursor: submitted ? 'default' : 'pointer', fontFamily: 'var(--font-space, "Space Grotesk", sans-serif)', letterSpacing: '0.02em', transition: 'background 0.3s, color 0.3s', display: 'flex', alignItems: 'center', gap: 4 }}
         >
           {submitted && isWrong ? zone.label : zone.accepted}
           {!submitted && <span style={{ fontSize: 14, lineHeight: 1, opacity: 0.85, fontWeight: 900, marginTop: -1 }}>×</span>}

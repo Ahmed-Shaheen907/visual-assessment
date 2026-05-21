@@ -3,6 +3,7 @@ export interface Landmark {
   label: string;
   lat: number;
   lng: number;
+  type?: 'landmark' | 'road';
 }
 
 export interface Section {
@@ -63,6 +64,7 @@ export const SECTIONS: Section[] = [
     ],
     improvementTip: 'Learn the key facts about El Dabaa — its nuclear plant proximity, infrastructure investments, and coastal properties.',
     landmarks: [
+      { id: 'ed-road-1', label: 'El Dabaa Road',              lat: 31.033775,  lng: 28.380921,  type: 'road' },
       { id: 'ed-1', label: 'El Dabaa Nuclear Power Plant',    lat: 31.0457665, lng: 28.4943264 },
       { id: 'ed-2', label: 'D-bay Tatweer',                   lat: 31.0816625, lng: 28.388447  },
       { id: 'ed-3', label: 'La Serena North Coast Village',   lat: 31.0780932, lng: 28.3781774 },
@@ -100,6 +102,7 @@ export const SECTIONS: Section[] = [
     bounds: [[30.80, 28.96], [30.86, 29.02]],
     improvementTip: 'Study the Marina El Alamein compound — its marina, resort layout, and key landmarks.',
     landmarks: [
+      { id: 'mr-road-1', label: 'Wadi El Natrun - El Alamein Road', lat: 30.840, lng: 29.010, type: 'road' },
       { id: 'mr-1', label: 'Marina Landmark 1', lat: 30.843, lng: 28.974 },
       { id: 'mr-2', label: 'Marina Landmark 2', lat: 30.831, lng: 28.985 },
       { id: 'mr-3', label: 'Marina Landmark 3', lat: 30.820, lng: 28.997 },

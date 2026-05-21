@@ -20,6 +20,7 @@ export interface DropZone {
   lat: number;
   lng: number;
   accepted: string | null;
+  type?: 'landmark' | 'road';
 }
 
 const ZONE_COLORS: Record<string, string> = {

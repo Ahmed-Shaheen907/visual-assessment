@@ -49,6 +49,7 @@ function buildZones(sectionIdx: number): DropZone[] {
     lat: lm.lat,
     lng: lm.lng,
     accepted: null,
+    type: lm.type,
   }));
 }
 

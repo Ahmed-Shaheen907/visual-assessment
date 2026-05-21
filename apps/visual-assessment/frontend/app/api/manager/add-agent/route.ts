@@ -52,9 +52,26 @@ export async function POST(req: NextRequest) {
   if (signInData?.user) {
     agentUserId = signInData.user.id;
     agentName = agentName ?? signInData.user.user_metadata?.name ?? null;
+
+    // Fetch profile while still signed in as agent — RLS allows self-read
+    const { data: agentProfile } = await standalone
+      .from('va_profiles')
+      .select('name, is_manager')
+      .eq('id', agentUserId)
+      .single();
+
     await standalone.auth.signOut();
+
+    if (!agentName) agentName = agentProfile?.name ?? null;
+
+    if (agentProfile?.is_manager) {
+      return NextResponse.json(
+        { error: 'This account is a manager and cannot be added as an agent.' },
+        { status: 400 }
+      );
+    }
   } else if (signInError?.message?.toLowerCase().includes('invalid login credentials')) {
-    // User doesn't exist — create them
+    // User doesn't exist — create them (new accounts are never managers)
     const { data: signUpData, error: signUpError } = await standalone.auth.signUp({ email: agentEmail, password });
     if (signUpData?.user) {
       agentUserId = signUpData.user.id;
@@ -67,22 +84,6 @@ export async function POST(req: NextRequest) {
 
   if (!agentUserId) {
     return NextResponse.json({ error: 'Could not resolve agent user ID.' }, { status: 500 });
-  }
-
-  // Fetch profile to resolve name and block manager accounts
-  const { data: agentProfile } = await supabaseServer
-    .from('va_profiles')
-    .select('name, is_manager')
-    .eq('id', agentUserId)
-    .single();
-
-  if (!agentName) agentName = agentProfile?.name ?? null;
-
-  if (agentProfile?.is_manager) {
-    return NextResponse.json(
-      { error: 'This account is a manager and cannot be added as an agent.' },
-      { status: 400 }
-    );
   }
 
   // Upsert into va_manager_managed_agents

@@ -77,7 +77,6 @@ export default function AuthPage() {
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) throw authError;
-      if (data.user.email === 'manager@gmail.com') { router.replace('/admin'); return; }
       const profile = await getUserProfile(data.user.id);
       router.replace(profile?.is_manager ? '/manager' : '/dashboard');
     } catch (err: unknown) {
@@ -102,13 +101,10 @@ export default function AuthPage() {
         return;
       }
 
-      const isAdmin = data.user!.email === 'manager@gmail.com';
       const isManager = signupRole === 'leader';
-      if (!isAdmin) {
-        await createProfile(data.user!.id, name.trim(), isManager);
-        localStorage.setItem('va_agent_name', name.trim());
-      }
-      router.replace(isAdmin ? '/admin' : isManager ? '/manager' : '/dashboard');
+      await createProfile(data.user!.id, name.trim(), isManager);
+      localStorage.setItem('va_agent_name', name.trim());
+      router.replace(isManager ? '/manager' : '/dashboard');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Sign up failed';
       setError(msg.includes('already') ? 'An account with this email already exists.' : msg);

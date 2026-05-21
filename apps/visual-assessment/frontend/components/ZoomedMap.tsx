@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef, MutableRefObject } from 'react';
-import { MapContainer, TileLayer, useMap, Marker, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, Marker } from 'react-leaflet';
 import { useDroppable } from '@dnd-kit/core';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -345,8 +345,18 @@ export default function ZoomedMap({
   selectedKmRange,
 }: ZoomedMapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [kmPulseVisible, setKmPulseVisible] = useState(false);
+  const kmPulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const handlePositions = useCallback((pos: Record<string, { x: number; y: number }>) => setPositions(pos), []);
+
+  useEffect(() => {
+    if (!selectedKmRange) return;
+    setKmPulseVisible(true);
+    if (kmPulseTimer.current) clearTimeout(kmPulseTimer.current);
+    kmPulseTimer.current = setTimeout(() => setKmPulseVisible(false), 5000);
+    return () => { if (kmPulseTimer.current) clearTimeout(kmPulseTimer.current); };
+  }, [selectedKmRange]);
 
   const forwardWheel = useCallback((e: React.WheelEvent) => {
     if (!mapRef.current) return;
@@ -420,7 +430,7 @@ export default function ZoomedMap({
               key={m.label}
               position={[m.lat, m.lng]}
               icon={L.divIcon({
-                html: `<div style="background:rgba(0,0,0,0.78);border:1px solid rgba(215,255,0,0.42);color:#D7FF00;font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap;font-family:monospace;box-shadow:0 0 6px rgba(215,255,0,0.15);pointer-events:none;">${m.label}</div>`,
+                html: `<div style="background:#D7FF00;color:#000;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;white-space:nowrap;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,0.55);pointer-events:none;">${m.label}</div>`,
                 className: '',
                 iconSize: [0, 0] as unknown as L.PointExpression,
                 iconAnchor: [0, 8] as unknown as L.PointExpression,
@@ -428,19 +438,16 @@ export default function ZoomedMap({
             />
           ))}
 
-          {/* Km range pulsing circle */}
-          {selectedKmRange && (
-            <Circle
-              center={[selectedKmRange.centerLat, selectedKmRange.centerLng]}
-              radius={selectedKmRange.radiusMeters}
-              pathOptions={{
-                color: '#D7FF00',
-                fillColor: '#D7FF00',
-                fillOpacity: 0.07,
-                weight: 2,
-                opacity: 0.65,
-                className: 'km-pulse-circle',
-              }}
+          {/* Km range pulsing rings — Uber-style, auto-hides after 5s */}
+          {selectedKmRange && kmPulseVisible && (
+            <Marker
+              position={[selectedKmRange.centerLat, selectedKmRange.centerLng]}
+              icon={L.divIcon({
+                html: `<div class="km-pulse-ring"></div><div class="km-pulse-ring km-pulse-ring-2"></div><div class="km-pulse-ring km-pulse-ring-3"></div>`,
+                className: '',
+                iconSize: [0, 0] as unknown as L.PointExpression,
+                iconAnchor: [0, 0] as unknown as L.PointExpression,
+              })}
             />
           )}
         </MapContainer>

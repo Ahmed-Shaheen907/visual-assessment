@@ -139,14 +139,23 @@ body {
     0 0 70px rgba(215,255,0,0.2);
 }
 
-@keyframes km-range-pulse {
-  0%, 100% { opacity: 0.7; }
-  50%       { opacity: 0.12; }
+@keyframes km-uber-ring {
+  0%   { transform: translate(-50%, -50%) scale(0.05); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1);    opacity: 0; }
 }
 
-.km-pulse-circle {
-  animation: km-range-pulse 2s ease-in-out infinite;
+.km-pulse-ring {
+  position: absolute;
+  top: 0; left: 0;
+  width: 520px; height: 520px;
+  border-radius: 50%;
+  border: 2.5px solid #D7FF00;
+  animation: km-uber-ring 2.2s cubic-bezier(0.08, 0.82, 0.17, 1) infinite;
+  pointer-events: none;
 }
+
+.km-pulse-ring-2 { animation-delay: 0.73s; }
+.km-pulse-ring-3 { animation-delay: 1.46s; }
 
 /* Draggable token hover — overrides inline styles */
 .draggable-token {

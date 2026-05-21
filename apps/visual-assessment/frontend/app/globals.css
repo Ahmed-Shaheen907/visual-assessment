@@ -152,6 +152,7 @@ body {
   border: 3.5px solid #D7FF00;
   background: rgba(215, 255, 0, 0.10);
   animation: km-uber-ring 2.2s cubic-bezier(0.08, 0.82, 0.17, 1) infinite;
+  animation-fill-mode: backwards;
   pointer-events: none;
 }
 

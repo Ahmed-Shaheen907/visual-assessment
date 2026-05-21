@@ -325,7 +325,7 @@ export default function Map({
             key={m.label}
             position={[m.lat, m.lng]}
             icon={L.divIcon({
-              html: `<div style="background:#D7FF00;color:#000;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;white-space:nowrap;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,0.55);pointer-events:none;">${m.label}</div>`,
+              html: `<div style="display:inline-block;background:#D7FF00;color:#000;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;white-space:nowrap;font-family:monospace;box-shadow:0 2px 8px rgba(0,0,0,0.55);pointer-events:none;">${m.label}</div>`,
               className: '',
               iconSize: [0, 0] as unknown as L.PointExpression,
               iconAnchor: [0, 8] as unknown as L.PointExpression,

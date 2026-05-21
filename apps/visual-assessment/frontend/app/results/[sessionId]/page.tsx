@@ -280,8 +280,8 @@ function AnswerRowItem({ row, aiGrade }: { row: AnswerRow; aiGrade?: AiGrade }) 
             <span className="font-semibold" style={{ color: 'rgba(215,255,0,0.75)' }}>{row.correctAnswer}</span>
           </div>
         )}
-        {/* Correct answer shown when wrong (non-AI rows) */}
-        {!aiResult && !isGrey && !effectiveCorrect && row.correctAnswer && (
+        {/* Correct answer shown when wrong or unanswered (non-AI rows) */}
+        {!aiResult && !effectiveCorrect && row.correctAnswer && (
           <div className="text-xs mt-0.5" style={{ fontFamily: 'var(--font-montserrat)', color: 'rgba(255,255,255,0.6)' }}>
             Correct answer:{' '}
             <span className="font-semibold" style={{ color: 'var(--tgl-lime)' }}>{row.correctAnswer}</span>

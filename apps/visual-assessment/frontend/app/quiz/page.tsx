@@ -25,7 +25,7 @@ export default function QuizPage() {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [quizQuestions] = useState<Question[]>(() => {
-    const sessionId = localStorage.getItem('va_session_id');
+    const sessionId = typeof window !== 'undefined' ? localStorage.getItem('va_session_id') : null;
     const usedRaw = sessionId ? localStorage.getItem(`va_mini_used_${sessionId}`) : null;
     const usedIds = new Set<string>(usedRaw ? JSON.parse(usedRaw) : []);
     return QUIZ_SECTIONS.flatMap((sec) => {

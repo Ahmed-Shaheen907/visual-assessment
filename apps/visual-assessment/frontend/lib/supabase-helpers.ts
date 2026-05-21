@@ -154,16 +154,6 @@ export async function removeManagerManagedAgent(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function getAdminManagedAgents(adminUserId: string): Promise<ManagedAgent[]> {
-  const { data, error } = await supabase
-    .from('va_admin_managed_agents')
-    .select('id, agent_user_id, agent_email, agent_name, created_at')
-    .eq('admin_user_id', adminUserId)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data ?? [];
-}
-
 export async function getAllSessions(): Promise<{ session: Session; answers: Answer[] }[]> {
   const { data: sessions, error: se } = await supabase
     .from('va_sessions')

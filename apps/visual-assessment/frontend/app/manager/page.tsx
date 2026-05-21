@@ -132,6 +132,63 @@ function AddAgentModal({ onClose, onAdded }: { onClose: () => void; onAdded: () 
   );
 }
 
+// ─── Confirm Remove Modal ─────────────────────────────────────────────────────
+
+function ConfirmRemoveModal({ name, onConfirm, onClose }: { name: string; onConfirm: () => void; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="w-full max-w-sm rounded-2xl p-6"
+        style={{ background: '#111', border: '1px solid rgba(239,68,68,0.2)', boxShadow: '0 24px 80px rgba(0,0,0,0.7), 0 0 40px rgba(239,68,68,0.06)' }}
+      >
+        {/* Icon */}
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center mb-4"
+          style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M9 3L15.5 14.5H2.5L9 3Z" stroke="#ef4444" strokeWidth="1.5" strokeLinejoin="round" />
+            <path d="M9 8V10.5" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="9" cy="13" r="0.75" fill="#ef4444" />
+          </svg>
+        </div>
+
+        <h2 className="text-base font-bold mb-1" style={{ color: 'var(--tgl-white)', fontFamily: 'var(--font-space)', letterSpacing: '-0.02em' }}>
+          Remove agent?
+        </h2>
+        <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-montserrat)', lineHeight: 1.6 }}>
+          <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>{name}</span> will be removed from your team. Their session history won&apos;t be deleted.
+        </p>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors duration-150"
+            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'var(--font-space)', cursor: 'pointer' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all duration-150"
+            style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)', fontFamily: 'var(--font-space)', cursor: 'pointer' }}
+            onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(239,68,68,0.28)'; el.style.color = '#fca5a5'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(239,68,68,0.15)'; el.style.color = '#f87171'; }}
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Section Score Pills ──────────────────────────────────────────────────────
 
 function ScorePill({ score }: { score: SectionScore }) {
@@ -192,7 +249,7 @@ function AgentCard({ data, onClick, onRemove }: { data: AgentWithStats; onClick:
             </div>
           )}
           <button
-            onClick={(e) => { e.stopPropagation(); if (window.confirm(`Remove ${displayName} from your team?`)) onRemove(agent.id); }}
+            onClick={(e) => { e.stopPropagation(); onRemove(agent.id); }}
             className="w-6 h-6 rounded-full flex items-center justify-center font-bold transition-all duration-150"
             style={{ background: 'rgba(239,68,68,0.08)', color: 'rgba(239,68,68,0.5)', border: '1px solid rgba(239,68,68,0.15)', lineHeight: 1, flexShrink: 0, fontSize: 14, cursor: 'pointer' }}
             onMouseEnter={e => { e.stopPropagation(); const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(239,68,68,0.25)'; el.style.color = '#f87171'; el.style.width = '28px'; el.style.height = '28px'; el.style.borderColor = 'rgba(239,68,68,0.35)'; }}
@@ -251,6 +308,7 @@ export default function ManagerPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [pendingRemove, setPendingRemove] = useState<{ id: string; name: string } | null>(null);
 
   const loadAgents = useCallback(async (mId: string) => {
     setLoading(true);
@@ -409,7 +467,7 @@ export default function ManagerPage() {
                 key={data.agent.id}
                 data={data}
                 onClick={() => router.push(`/manager/agent/${data.agent.agent_user_id}`)}
-                onRemove={handleRemoveAgent}
+                onRemove={(id) => setPendingRemove({ id, name: data.agent.agent_name ?? data.agent.agent_email.split('@')[0] })}
               />
             ))}
           </div>
@@ -418,6 +476,13 @@ export default function ManagerPage() {
 
       {showModal && (
         <AddAgentModal onClose={() => setShowModal(false)} onAdded={handleAgentAdded} />
+      )}
+      {pendingRemove && (
+        <ConfirmRemoveModal
+          name={pendingRemove.name}
+          onClose={() => setPendingRemove(null)}
+          onConfirm={() => { handleRemoveAgent(pendingRemove.id); setPendingRemove(null); }}
+        />
       )}
     </main>
   );

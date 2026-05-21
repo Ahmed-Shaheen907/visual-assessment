@@ -98,7 +98,8 @@ function buildAnswerReview(answers: Answer[]): PhaseGroup[] {
   for (const section of SECTIONS) {
     const phaseKey = `phase1_${section.id}`;
     const sa = answers.filter(a => a.phase === phaseKey);
-    if (sa.length === 0) continue;
+    const ma = answers.filter(a => a.phase === `phase1_mini_${section.id}`);
+    if (sa.length === 0 && ma.length === 0) continue;
 
     const rows: AnswerRow[] = sa.map(a => ({
       questionLabel: LANDMARK_LABELS[a.question_id] ?? a.question_id,
@@ -133,6 +134,21 @@ function buildAnswerReview(answers: Answer[]): PhaseGroup[] {
 
       const landmarkLabel = LANDMARK_LABELS[pq.landmarkId] ?? pq.landmarkId;
       subGroups.push({ key: `phase1_pin_${pq.landmarkId}`, label: `${landmarkLabel} — Project Quiz`, rows: pinRows, score: scoreRows(pinRows) });
+    }
+
+    if (ma.length > 0) {
+      const miniRows: AnswerRow[] = ma.map(a => {
+        const q = QUESTION_MAP[a.question_id];
+        const hasCorrect = q?.type !== 'freetext' && q?.answer !== '' && q?.answer !== undefined;
+        return {
+          id: a.question_id,
+          questionLabel: q?.question ?? a.question_id,
+          given: formatAnswerGiven(a.answer_given),
+          correct: hasCorrect ? a.correct : null,
+          correctAnswer: Array.isArray(q?.answer) ? (q.answer as string[]).join(', ') : (q?.answer ?? ''),
+        };
+      });
+      subGroups.push({ key: `phase1_mini_${section.id}`, label: `${section.label} — Section Quiz`, rows: miniRows, score: scoreRows(miniRows) });
     }
 
     groups.push({ key: phaseKey, label: section.label, rows, score: scoreRows(rows), subGroups: subGroups.length > 0 ? subGroups : undefined });

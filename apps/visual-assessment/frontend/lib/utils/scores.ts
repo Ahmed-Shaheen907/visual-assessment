@@ -59,6 +59,14 @@ export function computeScores(answers: Answer[]): SectionScore[] {
     scores.push({ key: phaseKey, label: `${landmarkLabel} — Project Quiz`, correct, total, pct: correct / total, tip: `Review the project-specific details for ${landmarkLabel}.` });
   }
 
+  for (const section of SECTIONS) {
+    const miniKey = `phase1_mini_${section.id}`;
+    const ma = answers.filter(a => a.phase === miniKey);
+    if (ma.length === 0) continue;
+    const correct = ma.filter(a => a.correct).length;
+    scores.push({ key: miniKey, label: `${section.label} — Section Quiz`, correct, total: ma.length, pct: correct / ma.length, tip: `Review the section knowledge questions for ${section.label}.` });
+  }
+
   const p2 = answers.filter(a => a.phase === 'phase2');
   if (p2.length > 0) {
     const correct = p2.filter(a => a.correct).length;

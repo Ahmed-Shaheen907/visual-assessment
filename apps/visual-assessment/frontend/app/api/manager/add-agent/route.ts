@@ -69,14 +69,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Could not resolve agent user ID.' }, { status: 500 });
   }
 
-  // If no name supplied, try to get it from va_profiles
-  if (!agentName) {
-    const { data: agentProfile } = await supabaseServer
-      .from('va_profiles')
-      .select('name')
-      .eq('id', agentUserId)
-      .single();
-    agentName = agentProfile?.name ?? null;
+  // Fetch profile to resolve name and block manager accounts
+  const { data: agentProfile } = await supabaseServer
+    .from('va_profiles')
+    .select('name, is_manager')
+    .eq('id', agentUserId)
+    .single();
+
+  if (!agentName) agentName = agentProfile?.name ?? null;
+
+  if (agentProfile?.is_manager) {
+    return NextResponse.json(
+      { error: 'This account is a manager and cannot be added as an agent.' },
+      { status: 400 }
+    );
   }
 
   // Upsert into va_manager_managed_agents

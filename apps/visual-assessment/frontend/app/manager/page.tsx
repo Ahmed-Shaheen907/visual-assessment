@@ -193,10 +193,10 @@ function AgentCard({ data, onClick, onRemove }: { data: AgentWithStats; onClick:
           )}
           <button
             onClick={(e) => { e.stopPropagation(); if (window.confirm(`Remove ${displayName} from your team?`)) onRemove(agent.id); }}
-            className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-opacity duration-150"
-            style={{ background: 'rgba(239,68,68,0.1)', color: 'rgba(239,68,68,0.6)', border: '1px solid rgba(239,68,68,0.2)', lineHeight: 1, flexShrink: 0 }}
-            onMouseEnter={e => { e.stopPropagation(); (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.2)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = 'rgba(239,68,68,0.6)'; }}
+            className="w-6 h-6 rounded-full flex items-center justify-center font-bold transition-all duration-150"
+            style={{ background: 'rgba(239,68,68,0.08)', color: 'rgba(239,68,68,0.5)', border: '1px solid rgba(239,68,68,0.15)', lineHeight: 1, flexShrink: 0, fontSize: 14, cursor: 'pointer' }}
+            onMouseEnter={e => { e.stopPropagation(); const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(239,68,68,0.25)'; el.style.color = '#f87171'; el.style.width = '28px'; el.style.height = '28px'; el.style.borderColor = 'rgba(239,68,68,0.35)'; }}
+            onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = 'rgba(239,68,68,0.08)'; el.style.color = 'rgba(239,68,68,0.5)'; el.style.width = '24px'; el.style.height = '24px'; el.style.borderColor = 'rgba(239,68,68,0.15)'; }}
             title="Remove agent from team"
           >
             ×

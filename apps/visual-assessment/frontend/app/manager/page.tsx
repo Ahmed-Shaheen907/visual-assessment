@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { getManagerManagedAgents, getAgentSessions } from '@/lib/supabase-helpers';
+import { getManagerManagedAgents, getAgentSessions, removeManagerManagedAgent } from '@/lib/supabase-helpers';
 import type { ManagedAgent } from '@/lib/supabase-helpers';
 import { computeScores, computeOverall, averageScores, PASS_THRESHOLD } from '@/lib/utils/scores';
 import type { SectionScore } from '@/lib/utils/scores';
@@ -155,7 +155,7 @@ function ScorePill({ score }: { score: SectionScore }) {
 
 // ─── Agent Card ───────────────────────────────────────────────────────────────
 
-function AgentCard({ data, onClick }: { data: AgentWithStats; onClick: () => void }) {
+function AgentCard({ data, onClick, onRemove }: { data: AgentWithStats; onClick: () => void; onRemove: (id: string) => void }) {
   const { agent, sessionCount, avgScores, overall } = data;
   const displayName = agent.agent_name ?? agent.agent_email.split('@')[0];
   const goodSections = avgScores.filter(s => s.pct >= PASS_THRESHOLD);
@@ -164,13 +164,14 @@ function AgentCard({ data, onClick }: { data: AgentWithStats; onClick: () => voi
 
   return (
     <div
-      className="rounded-2xl p-5 flex flex-col gap-4 cursor-pointer"
-      style={{ background: '#0d0d0d', border: '1px solid rgba(215,255,0,0.1)', transition: 'border-color 0.2s ease, box-shadow 0.2s ease' }}
+      className="group relative rounded-2xl p-5 flex flex-col cursor-pointer"
+      style={{ background: '#0d0d0d', border: '1px solid rgba(215,255,0,0.1)', transition: 'border-color 0.2s ease, box-shadow 0.2s ease', height: '400px' }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(215,255,0,0.25)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(215,255,0,0.06)'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(215,255,0,0.1)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between gap-4">
+      {/* Header row */}
+      <div className="flex items-start justify-between gap-4 shrink-0">
         <div>
           <div className="text-base font-bold leading-tight" style={{ color: 'var(--tgl-white)', fontFamily: 'var(--font-space)', letterSpacing: '-0.02em' }}>
             {displayName}
@@ -179,7 +180,7 @@ function AgentCard({ data, onClick }: { data: AgentWithStats; onClick: () => voi
             {agent.agent_email}
           </div>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="text-xs px-2.5 py-1 rounded-full font-bold"
             style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-space)', whiteSpace: 'nowrap' }}>
             {sessionCount} session{sessionCount !== 1 ? 's' : ''}
@@ -190,35 +191,49 @@ function AgentCard({ data, onClick }: { data: AgentWithStats; onClick: () => voi
               {Math.round(overall * 100)}%
             </div>
           )}
+          <button
+            onClick={(e) => { e.stopPropagation(); if (window.confirm(`Remove ${displayName} from your team?`)) onRemove(agent.id); }}
+            className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-opacity duration-150"
+            style={{ background: 'rgba(239,68,68,0.1)', color: 'rgba(239,68,68,0.6)', border: '1px solid rgba(239,68,68,0.2)', lineHeight: 1, flexShrink: 0 }}
+            onMouseEnter={e => { e.stopPropagation(); (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.2)'; (e.currentTarget as HTMLElement).style.color = '#f87171'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = 'rgba(239,68,68,0.6)'; }}
+            title="Remove agent from team"
+          >
+            ×
+          </button>
         </div>
       </div>
 
-      {sessionCount === 0 ? (
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-montserrat)' }}>
-          No sessions completed yet.
-        </p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {goodSections.length > 0 && (
-            <div>
-              <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(215,255,0,0.5)', fontFamily: 'var(--font-space)' }}>Strong</div>
-              <div className="flex flex-wrap gap-1.5">
-                {goodSections.map(s => <ScorePill key={s.key} score={s} />)}
+      {/* Content area */}
+      <div className="flex-1 min-h-0 mt-4 flex flex-col gap-2.5">
+        {sessionCount === 0 ? (
+          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-montserrat)' }}>
+            No sessions completed yet.
+          </p>
+        ) : (
+          <>
+            {goodSections.length > 0 && (
+              <div className="shrink-0">
+                <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(215,255,0,0.5)', fontFamily: 'var(--font-space)' }}>Strong</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {goodSections.map(s => <ScorePill key={s.key} score={s} />)}
+                </div>
               </div>
-            </div>
-          )}
-          {weakSections.length > 0 && (
-            <div>
-              <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(239,68,68,0.6)', fontFamily: 'var(--font-space)' }}>Needs Work</div>
-              <div className="flex flex-wrap gap-1.5">
-                {weakSections.map(s => <ScorePill key={s.key} score={s} />)}
+            )}
+            {weakSections.length > 0 && (
+              <div className="flex flex-col flex-1 min-h-0">
+                <div className="text-xs font-bold uppercase tracking-widest mb-2 shrink-0" style={{ color: 'rgba(239,68,68,0.6)', fontFamily: 'var(--font-space)' }}>Needs Work</div>
+                <div className="flex flex-wrap content-start gap-1.5 overflow-y-auto landmark-scroll flex-1 pr-1">
+                  {weakSections.map(s => <ScorePill key={s.key} score={s} />)}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </>
+        )}
+      </div>
 
-      <div className="flex items-center justify-end">
+      {/* Footer */}
+      <div className="flex items-center justify-end mt-4 shrink-0">
         <span className="text-xs font-bold" style={{ color: 'rgba(215,255,0,0.6)', fontFamily: 'var(--font-space)' }}>
           View Details →
         </span>
@@ -276,6 +291,16 @@ export default function ManagerPage() {
 
   function handleAgentAdded() {
     if (managerId) loadAgents(managerId);
+  }
+
+  async function handleRemoveAgent(id: string) {
+    setAgents(prev => prev.filter(a => a.agent.id !== id));
+    try {
+      await removeManagerManagedAgent(id);
+    } catch (err) {
+      console.error(err);
+      if (managerId) loadAgents(managerId);
+    }
   }
 
   const withSessions = agents.filter(a => a.sessionCount > 0);
@@ -384,6 +409,7 @@ export default function ManagerPage() {
                 key={data.agent.id}
                 data={data}
                 onClick={() => router.push(`/manager/agent/${data.agent.agent_user_id}`)}
+                onRemove={handleRemoveAgent}
               />
             ))}
           </div>

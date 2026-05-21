@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef, MutableRefObject } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, Marker, Circle } from 'react-leaflet';
 import { useDroppable } from '@dnd-kit/core';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { DropZone } from './Map';
+import { KM_MARKER_LABELS } from '@/lib/data/km-markers';
+import type { KmRange } from '@/lib/data/km-ranges';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -54,6 +56,25 @@ function FlyController({
       map.flyToBounds(bounds, { duration: 1.5, padding: [40, 40], maxZoom: 14 });
     }
   }, [map, bounds, target]);
+
+  return null;
+}
+
+// ─── KmFlyController ─────────────────────────────────────────────────────────
+
+function KmFlyController({ range }: { range: KmRange | null | undefined }) {
+  const map = useMap();
+  const prevLabel = useRef('');
+
+  useEffect(() => {
+    if (!range) {
+      prevLabel.current = '';
+      return;
+    }
+    if (range.label === prevLabel.current) return;
+    prevLabel.current = range.label;
+    map.flyTo([range.centerLat, range.centerLng], range.zoom, { duration: 1.5, easeLinearity: 0.2 });
+  }, [map, range]);
 
   return null;
 }
@@ -131,6 +152,7 @@ function DroppablePin({
   completedQuizPinIds,
   blinkingPinId,
   selectedLabelId,
+  masterPlanImage,
   onRemove,
   onPinClick,
   onLabelPlace,
@@ -144,11 +166,13 @@ function DroppablePin({
   completedQuizPinIds: Set<string>;
   blinkingPinId?: string | null;
   selectedLabelId?: string | null;
+  masterPlanImage?: string;
   onRemove?: (zoneId: string) => void;
   onPinClick?: (zoneId: string) => void;
   onLabelPlace?: (zoneId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: zone.id });
+  const [isStarHovered, setIsStarHovered] = useState(false);
   const baseColor = LANDMARK_COLORS[index % LANDMARK_COLORS.length];
 
   const answered = !!zone.accepted;
@@ -165,6 +189,8 @@ function DroppablePin({
   return (
     <div
       ref={setNodeRef}
+      onMouseEnter={() => setIsStarHovered(true)}
+      onMouseLeave={() => setIsStarHovered(false)}
       onClick={(e) => {
         if (placementMode) {
           e.stopPropagation();
@@ -180,7 +206,7 @@ function DroppablePin({
         width: 120,
         height: 120,
         transform: 'translate(-50%, -50%)',
-        zIndex: 1001,
+        zIndex: isStarHovered ? 2000 : 1001,
         pointerEvents: 'all',
         cursor: placementMode ? 'crosshair' : canClick ? 'pointer' : 'default',
         display: 'flex',
@@ -192,7 +218,7 @@ function DroppablePin({
       <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', background: `radial-gradient(circle, ${pinColor}33 0%, transparent 70%)`, opacity: isOver || placementMode ? 1 : answered ? 0.3 : 0.7, transition: 'opacity 0.2s', pointerEvents: 'none', animation: answered || submitted ? 'none' : 'pin-pulse-ring 2.5s ease-in-out infinite' }} />
       {/* Border ring */}
       <div style={{ position: 'absolute', width: 62, height: 62, borderRadius: '50%', left: '50%', top: '50%', transform: isOver ? 'translate(-50%, -50%) scale(1.15)' : 'translate(-50%, -50%)', border: `2px solid ${pinColor}`, opacity: isOver ? 1 : answered ? 0.5 : 0.65, boxShadow: isOver ? `0 0 16px ${pinColor}88` : answered ? `0 0 10px ${pinColor}44` : 'none', transition: 'opacity 0.2s, box-shadow 0.2s, transform 0.2s', pointerEvents: 'none' }} />
-      {/* Center circle — turns lime with ✦ when a quiz is available (no offset = exact geo coordinate) */}
+      {/* Center circle */}
       <div
         style={{
           width: 36,
@@ -222,6 +248,49 @@ function DroppablePin({
           <span style={{ color: '#fff', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-space)' }}>{index + 1}</span>
         )}
       </div>
+
+      {/* Masterplan hover preview */}
+      {canClick && masterPlanImage && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 'calc(100% + 4px)',
+            left: '50%',
+            transform: isStarHovered
+              ? 'translateX(-50%) translateY(0px) scale(1)'
+              : 'translateX(-50%) translateY(8px) scale(0.91)',
+            width: 188,
+            borderRadius: 10,
+            overflow: 'hidden',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.8), 0 0 0 1.5px rgba(215,255,0,0.35), 0 0 20px rgba(215,255,0,0.08)',
+            zIndex: 3000,
+            pointerEvents: 'none',
+            opacity: isStarHovered ? 1 : 0,
+            transition: 'opacity 0.22s ease, transform 0.3s cubic-bezier(0.16,1,0.3,1)',
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={masterPlanImage} alt="" style={{ width: '100%', display: 'block' }} />
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: '6px 8px',
+              background: 'linear-gradient(transparent, rgba(0,0,0,0.82))',
+              fontSize: 9,
+              fontWeight: 700,
+              color: 'rgba(215,255,0,0.75)',
+              fontFamily: 'var(--font-space)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Masterplan
+          </div>
+        </div>
+      )}
 
       {answered && (
         <div
@@ -253,6 +322,8 @@ interface ZoomedMapProps {
   selectedLabelId?: string | null;
   onLabelPlace?: (zoneId: string) => void;
   onDeselectLabel?: () => void;
+  masterPlanImages?: Record<string, string>;
+  selectedKmRange?: KmRange | null;
 }
 
 export default function ZoomedMap({
@@ -270,6 +341,8 @@ export default function ZoomedMap({
   selectedLabelId,
   onLabelPlace,
   onDeselectLabel,
+  masterPlanImages,
+  selectedKmRange,
 }: ZoomedMapProps) {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const mapRef = useRef<L.Map | null>(null);
@@ -292,6 +365,15 @@ export default function ZoomedMap({
   }, []);
 
   const mapFaded = quizPhase === 'transitioning' || quizPhase === 'active';
+
+  // Filter km labels to those within (or near) the current section bounds
+  const [minLat, minLng] = bounds[0];
+  const [maxLat, maxLng] = bounds[1];
+  const visibleKmLabels = KM_MARKER_LABELS.filter(
+    (m) =>
+      m.lat >= minLat - 0.08 && m.lat <= maxLat + 0.08 &&
+      m.lng >= minLng - 0.08 && m.lng <= maxLng + 0.08
+  );
 
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%' }}>
@@ -325,10 +407,41 @@ export default function ZoomedMap({
             bounds={bounds as L.LatLngBoundsExpression}
             target={quizPhase === 'zooming' ? activePinTarget : undefined}
           />
+          <KmFlyController range={selectedKmRange} />
           <MapLocker locked={quizPhase !== 'idle'} />
           <MapTracker dropZones={dropZones} onPositionsUpdate={handlePositions} />
           {selectedLabelId && onDeselectLabel && (
             <MapClickHandler onMapClick={onDeselectLabel} />
+          )}
+
+          {/* Km boundary labels */}
+          {visibleKmLabels.map((m) => (
+            <Marker
+              key={m.label}
+              position={[m.lat, m.lng]}
+              icon={L.divIcon({
+                html: `<div style="background:rgba(0,0,0,0.78);border:1px solid rgba(215,255,0,0.42);color:#D7FF00;font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap;font-family:monospace;box-shadow:0 0 6px rgba(215,255,0,0.15);pointer-events:none;">${m.label}</div>`,
+                className: '',
+                iconSize: [0, 0] as unknown as L.PointExpression,
+                iconAnchor: [0, 8] as unknown as L.PointExpression,
+              })}
+            />
+          ))}
+
+          {/* Km range pulsing circle */}
+          {selectedKmRange && (
+            <Circle
+              center={[selectedKmRange.centerLat, selectedKmRange.centerLng]}
+              radius={selectedKmRange.radiusMeters}
+              pathOptions={{
+                color: '#D7FF00',
+                fillColor: '#D7FF00',
+                fillOpacity: 0.07,
+                weight: 2,
+                opacity: 0.65,
+                className: 'km-pulse-circle',
+              }}
+            />
           )}
         </MapContainer>
 
@@ -346,6 +459,7 @@ export default function ZoomedMap({
               completedQuizPinIds={completedQuizPinIds}
               blinkingPinId={blinkingPinId}
               selectedLabelId={selectedLabelId}
+              masterPlanImage={masterPlanImages?.[zone.id]}
               onRemove={onRemove}
               onPinClick={onPinClick}
               onLabelPlace={onLabelPlace}

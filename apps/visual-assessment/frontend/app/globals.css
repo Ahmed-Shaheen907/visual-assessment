@@ -139,6 +139,15 @@ body {
     0 0 70px rgba(215,255,0,0.2);
 }
 
+@keyframes km-range-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 0.12; }
+}
+
+.km-pulse-circle {
+  animation: km-range-pulse 2s ease-in-out infinite;
+}
+
 /* Draggable token hover — overrides inline styles */
 .draggable-token {
   transition: box-shadow 160ms ease, border-color 160ms ease;

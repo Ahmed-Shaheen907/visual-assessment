@@ -22,7 +22,13 @@ import type { DropZone } from '@/components/Map';
 import type { QuizPhase } from '@/components/ZoomedMap';
 import { SECTIONS } from '@/lib/data/landmarks';
 import { PIN_QUIZZES } from '@/lib/data/pin-quizzes';
+import { KM_RANGES } from '@/lib/data/km-ranges';
+import type { KmRange } from '@/lib/data/km-ranges';
 import { saveAnswers } from '@/lib/supabase-helpers';
+
+const masterPlanImageMap: Record<string, string> = Object.fromEntries(
+  PIN_QUIZZES.map((q) => [q.landmarkId, q.masterPlanImage])
+);
 
 const ZoomedMap = dynamic(() => import('@/components/ZoomedMap'), { ssr: false });
 
@@ -72,6 +78,7 @@ export default function Phase1Page() {
   const [completedQuizPinIds, setCompletedQuizPinIds] = useState<Set<string>>(new Set());
   const [starBlinking, setStarBlinking]       = useState(false);
   const [showQuizPrompt, setShowQuizPrompt]   = useState(false);
+  const [selectedKmRange, setSelectedKmRange] = useState<KmRange | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -451,7 +458,92 @@ export default function Phase1Page() {
                 selectedLabelId={selectedLabelId}
                 onLabelPlace={handleLabelPlace}
                 onDeselectLabel={handleDeselectLabel}
+                masterPlanImages={masterPlanImageMap}
+                selectedKmRange={selectedKmRange}
               />
+
+              {/* Km range dropdown — top-right overlay on map */}
+              {quizPhase === 'idle' && !transitioning && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    zIndex: 1100,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  {selectedKmRange && (
+                    <button
+                      onClick={() => setSelectedKmRange(null)}
+                      title="Clear km range"
+                      style={{
+                        background: 'rgba(0,0,0,0.85)',
+                        border: '1px solid rgba(215,255,0,0.25)',
+                        borderRadius: 8,
+                        color: 'rgba(215,255,0,0.7)',
+                        width: 28,
+                        height: 28,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        fontSize: 14,
+                        backdropFilter: 'blur(8px)',
+                        flexShrink: 0,
+                        fontFamily: 'var(--font-space)',
+                      }}
+                    >
+                      ×
+                    </button>
+                  )}
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <select
+                      value={selectedKmRange?.label ?? ''}
+                      onChange={(e) => {
+                        const range = KM_RANGES.find((r) => r.label === e.target.value) ?? null;
+                        setSelectedKmRange(range);
+                      }}
+                      style={{
+                        background: 'rgba(0,0,0,0.85)',
+                        border: `1px solid ${selectedKmRange ? 'rgba(215,255,0,0.5)' : 'rgba(215,255,0,0.2)'}`,
+                        borderRadius: 8,
+                        color: selectedKmRange ? '#D7FF00' : 'rgba(255,255,255,0.45)',
+                        fontSize: 11,
+                        fontFamily: 'var(--font-space)',
+                        fontWeight: 700,
+                        padding: '5px 28px 5px 10px',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(8px)',
+                        outline: 'none',
+                        appearance: 'none' as const,
+                        boxShadow: selectedKmRange ? '0 0 12px rgba(215,255,0,0.15)' : 'none',
+                        transition: 'border-color 0.2s, box-shadow 0.2s, color 0.2s',
+                      }}
+                    >
+                      <option value="">⊞ Km range…</option>
+                      {KM_RANGES.map((r) => (
+                        <option key={r.label} value={r.label}>{r.label}</option>
+                      ))}
+                    </select>
+                    <span
+                      style={{
+                        position: 'absolute',
+                        right: 8,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: 'rgba(215,255,0,0.5)',
+                        fontSize: 10,
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      ▾
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Masterplan PNG */}
               {activePinQuiz && (quizPhase === 'transitioning' || quizPhase === 'active') && (

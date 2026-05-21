@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, Marker } from 'react-leaflet';
+import { KM_MARKER_LABELS } from '@/lib/data/km-markers';
 import { useDroppable } from '@dnd-kit/core';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -317,6 +318,20 @@ export default function Map({
         {selectedLabelId && onDeselectLabel && (
           <MapClickHandler onMapClick={onDeselectLabel} />
         )}
+
+        {/* Km boundary labels along the North Coast road */}
+        {KM_MARKER_LABELS.map((m) => (
+          <Marker
+            key={m.label}
+            position={[m.lat, m.lng]}
+            icon={L.divIcon({
+              html: `<div style="background:rgba(0,0,0,0.78);border:1px solid rgba(215,255,0,0.42);color:#D7FF00;font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap;font-family:monospace;box-shadow:0 0 6px rgba(215,255,0,0.15);pointer-events:none;">${m.label}</div>`,
+              className: '',
+              iconSize: [0, 0] as unknown as L.PointExpression,
+              iconAnchor: [0, 8] as unknown as L.PointExpression,
+            })}
+          />
+        ))}
       </MapContainer>
 
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} onWheel={forwardWheel}>
